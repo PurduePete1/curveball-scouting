@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stovepipes Scouting Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a manager's scouting desk. Scoreboard header, tabbed boards below,
+   every player reduced to letter grades and plain-English tags. */
+:root {
+  --bg: #eef2ee;
+  --surface: #ffffff;
+  --ink: #15211a;
+  --muted: #5a6b60;
+  --line: #d6dfd8;
+  --accent: #0f5c3a;
+  --accent-ink: #ffffff;
+  --g-a: #16794a; --g-a-bg: #e2f3e9;
+  --g-b: #1f5f99; --g-b-bg: #e3eef8;
+  --g-c: #8a6400; --g-c-bg: #fbf1d6;
+  --g-d: #a8322b; --g-d-bg: #fbe5e3;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1611; --surface: #142019; --ink: #e6eee8; --muted: #93a79a; --line: #24372c;
+    --accent: #f0bf4c; --accent-ink: #1b1505;
+    --g-a: #5fd39a; --g-a-bg: #133324;
+    --g-b: #7ab6ef; --g-b-bg: #14283b;
+    --g-c: #f0c45a; --g-c-bg: #332a10;
+    --g-d: #f08a80; --g-d-bg: #3a1a17;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1611; --surface: #142019; --ink: #e6eee8; --muted: #93a79a; --line: #24372c;
+  --accent: #f0bf4c; --accent-ink: #1b1505;
+  --g-a: #5fd39a; --g-a-bg: #133324;
+  --g-b: #7ab6ef; --g-b-bg: #14283b;
+  --g-c: #f0c45a; --g-c-bg: #332a10;
+  --g-d: #f08a80; --g-d-bg: #3a1a17;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font-body); }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+/* Header */
+header.board { background: #10261a; color: #f1f5f0; border-bottom: 4px solid #f0bf4c; }
+.board-inner { max-width: 1240px; margin: 0 auto; padding: 18px 20px 14px; display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: end; justify-content: space-between; }
+.board h1 { font: 700 34px/1 var(--font-display); letter-spacing: .04em; text-transform: uppercase; margin: 0; text-wrap: balance; }
+.board .sub { font: 500 13px/1.3 var(--font-num); color: #b7c9bc; margin-top: 6px; }
+.board .sub b { color: #f0bf4c; font-weight: 500; }
+.upload { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 7px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: #f0bf4c; color: #1b1505; border-color: #f0bf4c; }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.ghost { background: transparent; color: #d7e3da; border-color: #3c5a47; }
+.drop-hint { font-size: 12px; color: #9fb4a5; }
+body.dragging::after { content: "Drop your roster CSV anywhere"; position: fixed; inset: 0; display: grid; place-items: center; background: rgba(13,30,20,.82); color: #f0bf4c; font: 700 34px var(--font-display); text-transform: uppercase; letter-spacing: .05em; z-index: 50; }
+
+nav.tabs { background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 10; }
+.tabs-inner { max-width: 1240px; margin: 0 auto; padding: 0 12px; display: flex; gap: 2px; overflow-x: auto; }
+.tabs a { padding: 12px 14px; text-decoration: none; color: var(--muted); font: 600 16px var(--font-display); letter-spacing: .06em; text-transform: uppercase; border-bottom: 3px solid transparent; white-space: nowrap; }
+.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tabs a:hover { color: var(--ink); }
+
+main { max-width: 1240px; margin: 0 auto; padding: 20px 20px 60px; }
+.notice { padding: 10px 14px; border-radius: 8px; border: 1px solid var(--g-d); background: var(--g-d-bg); color: var(--ink); margin-bottom: 16px; }
+.notice.info { border-color: var(--line); background: var(--surface); }
+h2 { font: 700 24px/1.1 var(--font-display); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 4px; text-wrap: balance; }
+h3 { font: 700 18px/1.1 var(--font-display); text-transform: uppercase; letter-spacing: .05em; margin: 0; }
+.lede { color: var(--muted); margin: 0 0 18px; max-width: 70ch; }
+.section-head { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+
+/* Summary tiles */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 22px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 2px; cursor: pointer; text-align: left; }
+.tile:hover { border-color: var(--accent); }
+.tile .k { font: 600 12px var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.tile .v { font-weight: 600; font-size: 16px; }
+.tile .d { font-size: 13px; color: var(--muted); }
+
+/* Grades */
+.gr { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; padding: 1px 6px; border-radius: 5px; font: 600 13px var(--font-num); }
+.gr.a { color: var(--g-a); background: var(--g-a-bg); }
+.gr.b { color: var(--g-b); background: var(--g-b-bg); }
+.gr.c { color: var(--g-c); background: var(--g-c-bg); }
+.gr.d { color: var(--g-d); background: var(--g-d-bg); }
+.tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.tag.plus { border-color: color-mix(in srgb, var(--g-a) 45%, transparent); color: var(--g-a); }
+.tag.minus { border-color: color-mix(in srgb, var(--g-d) 45%, transparent); color: var(--g-d); }
+.tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.btn.primary-green { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.danger { color: var(--g-d); border-color: color-mix(in srgb, var(--g-d) 50%, transparent); }
+.notice.changes { display: grid; gap: 8px; }
+.pill { display: inline-block; font: 600 12px var(--font-body); padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.pill.keep { color: var(--g-a); background: var(--g-a-bg); }
+.pill.depth { color: var(--muted); background: color-mix(in srgb, var(--muted) 14%, transparent); }
+.pill.cut { color: var(--g-d); background: var(--g-d-bg); }
+.fa-layout { display: grid; gap: 16px; grid-template-columns: minmax(300px, 400px) 1fr; align-items: start; }
+@media (max-width: 860px) { .fa-layout { grid-template-columns: 1fr; } }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.field { display: grid; gap: 3px; font-size: 12.5px; color: var(--muted); }
+.field input, .field select { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 6px; padding: 6px 8px; width: 100%; }
+.field input[type="number"] { font-family: var(--font-num); }
+.field.wide { grid-column: 1 / -1; }
+.verdict { border-radius: 10px; padding: 14px 16px; display: grid; gap: 4px; border: 1px solid var(--line); }
+.verdict .big { font: 700 30px/1 var(--font-display); letter-spacing: .05em; text-transform: uppercase; }
+.verdict.sign { background: var(--g-a-bg); border-color: color-mix(in srgb, var(--g-a) 40%, transparent); }
+.verdict.sign .big { color: var(--g-a); }
+.verdict.maybe { background: var(--g-c-bg); border-color: color-mix(in srgb, var(--g-c) 40%, transparent); }
+.verdict.maybe .big { color: var(--g-c); }
+.verdict.pass { background: var(--g-d-bg); border-color: color-mix(in srgb, var(--g-d) 40%, transparent); }
+.verdict.pass .big { color: var(--g-d); }
+ul.points { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+table.compare td, table.compare th { padding: 6px 10px; }
+table.compare tbody tr { cursor: default; }
+
+/* Tables */
+.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; padding: 6px 12px; cursor: pointer; font-weight: 500; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+input[type="search"] { border: 1px solid var(--line); background: var(--surface); border-radius: 7px; padding: 6px 10px; min-width: 180px; }
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { font: 600 12px var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; position: sticky; top: 0; background: var(--surface); }
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable:hover { color: var(--ink); }
+th[aria-sort="descending"]::after { content: " ▼"; }
+th[aria-sort="ascending"]::after { content: " ▲"; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+tbody tr:last-child td { border-bottom: 0; }
+td.c, th.c { text-align: center; }
+.name { font-weight: 600; white-space: nowrap; }
+.pos { font: 500 13px var(--font-num); color: var(--muted); white-space: nowrap; }
+.rank { font: 600 13px var(--font-num); color: var(--muted); }
+
+/* Value bar */
+.bar { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+.bar i { display: block; height: 7px; border-radius: 4px; background: var(--accent); }
+.bar .track { flex: 1; background: var(--line); border-radius: 4px; height: 7px; overflow: hidden; }
+
+/* Cards / grids */
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; align-content: start; }
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.card-head .meta { font-size: 12px; color: var(--muted); }
+ol.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+ol.list li { display: grid; grid-template-columns: 22px 1fr auto auto; gap: 8px; align-items: center; padding: 5px 6px; border-radius: 6px; cursor: pointer; }
+ol.list li:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+ol.list li.top { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+ol.list .sec { font-size: 11px; color: var(--muted); margin-left: 4px; }
+
+/* Lineup cards */
+.lineups { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); }
+.order li { grid-template-columns: 22px 1fr 36px auto; }
+.order .who { display: grid; }
+.order .role { font-size: 11.5px; color: var(--muted); line-height: 1.2; }
+.subhead { font: 600 12px var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 4px 0 0; }
+.subs { display: grid; gap: 4px; font-size: 13.5px; }
+.subs div { display: block; }
+.subs b { font-weight: 600; }
+.bench { font-size: 13px; color: var(--muted); }
+.settings { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; margin-bottom: 16px; }
+.settings label { display: grid; gap: 2px; font-size: 13px; color: var(--muted); }
+.settings output { font: 600 13px var(--font-num); color: var(--ink); }
+input[type="range"] { accent-color: var(--accent); width: 180px; }
+
+/* Rest status */
+.rest { font-size: 12px; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
+.rest::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--g-a); }
+.rest.tired::before { background: var(--g-c); }
+
+/* Drawer */
+.overlay { position: fixed; inset: 0; background: rgba(5,12,8,.55); display: none; z-index: 40; }
+.overlay.open { display: block; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(460px, 100%); background: var(--surface); border-left: 1px solid var(--line); z-index: 41; transform: translateX(100%); transition: transform .2s ease; overflow-y: auto; padding: 18px 20px 40px; display: grid; gap: 14px; align-content: start; }
+.drawer.open { transform: none; }
+@media (prefers-reduced-motion: reduce) { .drawer { transition: none; } }
+.drawer h2 { font-size: 28px; }
+.drawer .close { position: absolute; top: 12px; right: 12px; }
+.summary { font-size: 14.5px; line-height: 1.55; max-width: 65ch; }
+.ratings { display: grid; gap: 6px; }
+.rating { display: grid; grid-template-columns: 120px 1fr 30px 40px; align-items: center; gap: 8px; font-size: 13.5px; }
+.rating .track { background: var(--line); border-radius: 4px; height: 7px; overflow: hidden; }
+.rating .fill { height: 100%; border-radius: 4px; }
+.fill.a { background: var(--g-a); } .fill.b { background: var(--g-b); } .fill.c { background: var(--g-c); } .fill.d { background: var(--g-d); }
+.statgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.stat { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+.stat .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.stat .v { font: 600 15px var(--font-num); }
+
+/* Guide */
+.guide { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.guide dl { margin: 0; display: grid; gap: 8px; }
+.guide dt { font-weight: 600; }
+.guide dd { margin: 0; color: var(--muted); font-size: 14px; }
+.scale { display: flex; flex-wrap: wrap; gap: 6px; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+@media (max-width: 520px) {
+  .board h1 { font-size: 28px; }
+  main { padding: 16px 16px 50px; }
+  .rating { grid-template-columns: 96px 1fr 26px 38px; }
+  .statgrid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+<header class="board">
+  <div class="board-inner">
+    <div>
+      <h1 id="teamName">Scouting Desk</h1>
+      <div class="sub" id="fileLine">No roster loaded</div>
+    </div>
+    <div class="upload">
+      <input type="file" id="fileInput" accept=".csv,text/csv" hidden>
+      <button class="btn primary" id="uploadBtn" type="button">Upload roster CSV</button>
+      <button class="btn ghost" id="resetBtn" type="button">Use Claude's latest read</button>
+      <span class="drop-hint">or drag the file onto the page</span>
+    </div>
+  </div>
+</header>
+<nav class="tabs" aria-label="Sections">
+  <div class="tabs-inner">
+    <a href="#roster">Rankings</a>
+    <a href="#positions">By position</a>
+    <a href="#lineups">Lineups</a>
+    <a href="#pitching">Pitching</a>
+    <a href="#free-agent">Free agents</a>
+    <a href="#guide">How grades work</a>
+  </div>
+</nav>
+<main id="main"></main>
+
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" aria-label="Player details"></aside>
+
+<script>
+const SAMPLE_CSV = "Name,Type,Primary position,Secondary position,Age,Bats,Throws,Pack tier,Prime,Available at (UTC),Overall (OVR),Contact,Power,Plate discipline,Bunting,Velocity,Accuracy,Finesse,Endurance,Fielding range,Handling,Arm strength,Flexibility,Speed,Aggression,Awareness,Games (G),Plate appearances (PA),At-bats (AB),Runs (R),Hits (H),Doubles (2B),Triples (3B),Home runs (HR),Runs batted in (RBI),Walks (BB),Strikeouts (SO),Stolen bases (SB),Caught stealing (CS),Batting average (AVG),On-base pct (OBP),Slugging (SLG),OPS,AVG vs LHP,OBP vs LHP,SLG vs LHP,AVG vs RHP,OBP vs RHP,SLG vs RHP,Wins (W),Losses (L),Saves (SV),Blown saves (BS),Innings pitched (IP),Batters faced (BF),Hits allowed,Earned runs (ER),Walks allowed,Strikeouts,Home runs allowed,ERA,WHIP,K/9,BB/9,ERA vs LHB,WHIP vs LHB,ERA vs RHB,WHIP vs RHB\nSebastian Ortega,Hitter,C,1B,20,R,R,Blue,Rising,,50,58,49,56,53,,,,,39,55,39,59,33,43,57,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nEfrain Slater,Hitter,CF,RF,20,R,L,Blue,Rising,,49,57,57,41,60,,,,,38,48,39,37,35,38,48,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nOctavio Kondo,Hitter,1B,C,20,L,L,Green,Rising,,49,56,55,51,41,,,,,38,47,54,49,37,35,40,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nLeon Castillo,Hitter,CF,,19,L,R,Blue,Rising,,48,54,47,37,49,,,,,45,53,44,40,43,49,55,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nLeon Holmes,Hitter,1B,C,20,R,R,Green,Rising,,48,46,56,42,55,,,,,52,55,52,41,28,48,38,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nBlake Reed,Hitter,1B,3B,20,R,R,Green,Rising,,47,41,52,48,48,,,,,46,51,44,55,43,48,34,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nElias Massey,Hitter,SS,3B,19,R,R,Blue,Rising,,47,50,50,53,37,,,,,54,32,39,37,50,28,51,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nDaisuke Ikeda,Hitter,3B,SS,20,R,L,Green,Rising,,47,46,47,54,44,,,,,53,50,42,46,40,50,39,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nAaron Greene,Hitter,2B,SS,19,R,R,Blue,Rising,,47,53,47,46,46,,,,,41,54,44,37,30,51,49,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nPaul Sweeney,Hitter,LF,RF,20,S,R,Green,Rising,,47,38,44,57,43,,,,,53,54,44,51,59,51,44,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nEduardo Reyes,Hitter,CF,,18,R,L,Gold,Rising,,46,48,44,35,52,,,,,52,51,36,37,47,48,52,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nWeston Joyce,Hitter,3B,,19,R,R,Green,Rising,,46,40,49,54,55,,,,,40,47,41,51,54,33,39,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nStanley Thompson,Hitter,SS,3B,19,R,R,Blue,Rising,,46,51,42,52,44,,,,,44,48,45,35,36,48,51,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nBrendan Boyd,Hitter,1B,C,18,L,L,Blue,Rising,,45,49,43,48,40,,,,,50,32,36,52,43,51,48,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nAnderson Nunez,Hitter,CF,,18,R,L,Blue,Rising,,45,46,51,39,48,,,,,42,49,51,49,34,51,30,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nDerek Underwood,Hitter,LF,CF,18,R,R,Green,Rising,,44,53,38,37,52,,,,,43,44,36,52,48,49,45,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nBlake Valdez,Hitter,2B,SS,19,R,R,Green,Rising,,44,41,35,48,52,,,,,51,50,48,52,35,55,53,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nKai Ferrell,Hitter,3B,2B,19,R,R,Green,Rising,,44,42,40,41,44,,,,,52,45,52,36,54,45,45,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nDennis Burgos,Hitter,2B,3B,18,L,R,Green,Rising,,43,49,42,52,48,,,,,43,33,34,35,41,35,45,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nOctavio Santana,Hitter,2B,3B,18,R,R,Green,Rising,,43,49,44,38,44,,,,,51,51,36,47,23,46,28,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nTatsuya Watts,Hitter,2B,SS,18,R,R,Green,Rising,,43,37,36,52,38,,,,,46,51,51,49,51,49,45,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nDarius Choi,Hitter,C,1B,18,R,R,Green,Rising,,43,36,52,52,44,,,,,34,43,44,44,39,34,43,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nWilmer Phelps,Hitter,LF,,18,L,L,Green,Rising,,41,48,32,40,47,,,,,45,44,50,37,38,36,31,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nFernando Miranda,Hitter,LF,RF,18,R,R,Green,Rising,,40,38,38,47,37,,,,,51,47,47,35,32,33,30,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nNicholas Washington,Hitter,RF,,18,L,R,Green,Rising,,39,33,38,36,34,,,,,52,46,46,52,40,37,27,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nAlcides Velez,Pitcher,SP,,19,,L,Gold,Rising,,52,,,,,45,48,53,74,52,38,29,,41,,46,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nJack Gillespie,Pitcher,SP,,20,,R,Green,Rising,,50,,,,,44,50,40,78,52,59,36,,28,,30,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nElijah Cisneros,Pitcher,SP,,20,,R,Green,Rising,,50,,,,,50,47,52,58,43,57,56,,28,,33,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nTaylor Scott,Pitcher,SP,,20,,R,Green,Rising,,49,,,,,45,54,46,59,47,29,56,,41,,41,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nCraig Mejia,Pitcher,SP,,20,,R,Green,Rising,,49,,,,,38,49,58,59,39,33,46,,43,,45,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nGideon Velasquez,Pitcher,SP,,20,,R,Green,Rising,,49,,,,,38,49,58,59,39,33,46,,43,,45,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nMitchell Forbes,Pitcher,SP,,20,,R,Green,Rising,,49,,,,,35,47,50,77,30,26,57,,32,,50,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nColby Shannon,Pitcher,MR,,20,,R,Green,Rising,,48,,,,,60,55,38,36,53,47,40,,32,,36,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nDouglas Thomas,Pitcher,MR,,20,,R,Green,Rising,,48,,,,,48,52,58,31,49,48,40,,40,,38,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nJordan Wojcik,Pitcher,MR,,20,,R,Green,Rising,,48,,,,,55,49,51,39,53,38,41,,40,,43,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nCallum Todd,Pitcher,MR,,20,,R,Green,Rising,,48,,,,,49,59,39,41,55,42,30,,51,,59,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nElliot Lopez,Pitcher,SP,,18,,L,Blue,Rising,,47,,,,,29,47,50,71,29,48,42,,34,,26,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nKingston Elliott,Pitcher,SP,,20,,L,Green,Rising,,47,,,,,52,38,40,72,46,33,47,,39,,27,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nMalcolm Stewart,Pitcher,SP,,18,,R,Green,Rising,,45,,,,,39,38,45,71,36,42,47,,28,,42,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nClayton Blair,Pitcher,CL,,18,,R,Green,Rising,,43,,,,,68,39,37,30,43,47,50,,35,,28,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+const SAMPLE_FILE = "newburgh-stovepipes-roster-2026-11-02.csv";
+const SAMPLE_AT = Date.parse("2026-11-03T02:40:00Z"); // when Claude read this roster from curveball.gg
+const ROSTER_MAX = 40, PITCHER_MAX = 15;
+// Players shown as locked (or in the starting lineup) on curveball.gg when Claude read the roster.
+const SAMPLE_LOCKED = ["Leon Castillo","Leon Holmes","Blake Reed","Elias Massey","Daisuke Ikeda","Eduardo Reyes","Sebastian Ortega","Efrain Slater","Octavio Kondo","Aaron Greene","Paul Sweeney","Stanley Thompson","Dennis Burgos","Alcides Velez","Jack Gillespie","Elijah Cisneros","Craig Mejia","Colby Shannon","Douglas Thomas","Jordan Wojcik","Elliot Lopez","Malcolm Stewart","Clayton Blair"];
+
+// ---------------------------------------------------------------- settings
+const state = {
+  players: [], hitters: [], pitchers: [], file: "", team: "",
+  view: "roster", filter: "h", search: "", sort: { key: "value", dir: -1 },
+  platoon: 0.05, defWeight: 0.25,
+  rosterLimit: null,
+  faType: "Hitter",
+  fa: {
+    Hitter: { name: "Example free agent", pos1: "3B", pos2: "SS", hand: "R", age: 19, tier: "Green",
+      contact: 52, power: 50, eye: 49, bunt: 45, speed: 46, aware: 48, aggr: 45, range: 50, handling: 49, arm: 52, flex: 47 },
+    Pitcher: { name: "Example free agent", pos1: "SP", pos2: "", hand: "R", age: 19, tier: "Green",
+      velo: 52, acc: 50, fin: 48, end: 66, range: 40, handling: 40, arm: 40 },
+  },
+};
+const FIELD = ["C", "1B", "2B", "3B", "SS", "LF", "CF", "RF"];
+const ALL_POS = [...FIELD, "DH"];
+const DEF_PROFILES = {
+  C:  { handling: .55, arm: .45 },
+  "1B": { handling: .60, range: .25, flex: .15 },
+  "2B": { range: .40, handling: .25, flex: .25, arm: .10 },
+  SS: { range: .40, arm: .25, handling: .20, flex: .15 },
+  "3B": { arm: .35, range: .30, handling: .25, flex: .10 },
+  LF: { range: .60, arm: .25, handling: .15 },
+  CF: { range: .70, arm: .15, handling: .15 },
+  RF: { range: .50, arm: .35, handling: .15 },
+};
+const SECONDARY_PENALTY = 0.05;
+const MIN_SP_END = 55;
+
+// ---------------------------------------------------------------- grades
+const GRADE_SCALE = [[65,"A+"],[60,"A"],[57,"A-"],[54,"B+"],[51,"B"],[48,"B-"],[45,"C+"],[42,"C"],[39,"C-"],[36,"D+"],[32,"D"],[-1,"F"]];
+function grade(v) { for (const [t, g] of GRADE_SCALE) if (v >= t) return g; return "F"; }
+function gClass(g) { return g[0] === "A" ? "a" : g[0] === "B" ? "b" : g[0] === "C" ? "c" : "d"; }
+function gr(v) { const g = grade(v); return `<span class="gr ${gClass(g)}" title="${Math.round(v)}">${g}</span>`; }
+
+// ---------------------------------------------------------------- csv
+function parseCSV(text) {
+  const rows = []; let row = [], f = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) {
+      if (ch === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; }
+      else f += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === ",") { row.push(f); f = ""; }
+    else if (ch === "\n" || ch === "\r") {
+      if (ch === "\r" && text[i + 1] === "\n") i++;
+      row.push(f); f = ""; if (row.some(c => c !== "")) rows.push(row); row = [];
+    } else f += ch;
+  }
+  row.push(f); if (row.some(c => c !== "")) rows.push(row);
+  return rows;
+}
+
+function loadRoster(text, fileName) {
+  const rows = parseCSV(text.replace(/^﻿/, ""));
+  if (!rows.length) throw new Error("That file is empty.");
+  const head = rows[0].map(h => h.trim());
+  const ix = {}; head.forEach((h, i) => ix[h] = i);
+  if (ix["Name"] == null || ix["Type"] == null) throw new Error("This doesn't look like a curveball.gg roster export: it needs Name and Type columns.");
+  const s = (r, k) => (ix[k] == null ? "" : String(r[ix[k]] ?? "").trim());
+  const n = (r, k) => { const v = parseFloat(s(r, k)); return Number.isFinite(v) ? v : null; };
+  const z = (r, k) => n(r, k) ?? 0;
+  const players = [];
+  rows.slice(1).forEach((r, i) => {
+    const type = s(r, "Type"); if (!s(r, "Name")) return;
+    const base = {
+      id: i, name: s(r, "Name"), type, pos1: s(r, "Primary position"), pos2: s(r, "Secondary position"),
+      age: n(r, "Age"), bats: s(r, "Bats"), throws: s(r, "Throws"), tier: s(r, "Pack tier"), prime: s(r, "Prime"),
+      ovr: z(r, "Overall (OVR)"),
+      range: z(r, "Fielding range"), handling: z(r, "Handling"), arm: z(r, "Arm strength"), flex: z(r, "Flexibility"),
+      speed: z(r, "Speed"), aggr: z(r, "Aggression"), aware: z(r, "Awareness"),
+      g: z(r, "Games (G)"),
+      availableAt: s(r, "Available at (UTC)"),
+    };
+    if (type === "Hitter") {
+      Object.assign(base, {
+        contact: z(r, "Contact"), power: z(r, "Power"), eye: z(r, "Plate discipline"), bunt: z(r, "Bunting"),
+        stats: { PA: n(r, "Plate appearances (PA)"), AVG: n(r, "Batting average (AVG)"), OBP: n(r, "On-base pct (OBP)"), SLG: n(r, "Slugging (SLG)"), OPS: n(r, "OPS"), HR: n(r, "Home runs (HR)"), RBI: n(r, "Runs batted in (RBI)"), SB: n(r, "Stolen bases (SB)"), BB: n(r, "Walks (BB)"), SO: n(r, "Strikeouts (SO)") },
+        splits: { L: [n(r, "AVG vs LHP"), n(r, "OBP vs LHP"), n(r, "SLG vs LHP")], R: [n(r, "AVG vs RHP"), n(r, "OBP vs RHP"), n(r, "SLG vs RHP")] },
+      });
+    } else if (type === "Pitcher") {
+      Object.assign(base, {
+        velo: z(r, "Velocity"), acc: z(r, "Accuracy"), fin: z(r, "Finesse"), end: z(r, "Endurance"),
+        stats: { IP: n(r, "Innings pitched (IP)"), W: n(r, "Wins (W)"), L: n(r, "Losses (L)"), SV: n(r, "Saves (SV)"), ERA: n(r, "ERA"), WHIP: n(r, "WHIP"), K9: n(r, "K/9"), BB9: n(r, "BB/9"), SO: n(r, "Strikeouts") },
+        splits: { L: [n(r, "ERA vs LHB"), n(r, "WHIP vs LHB")], R: [n(r, "ERA vs RHB"), n(r, "WHIP vs RHB")] },
+      });
+    } else return;
+    players.push(base);
+  });
+  if (!players.length) throw new Error("No hitters or pitchers found in that file.");
+  state.basePlayers = players;
+  state.file = fileName;
+  state.team = teamFromFile(fileName);
+  applyChanges();
+}
+
+// ---------------------------------------------------------------- moves made since the export
+// The page can't read curveball.gg directly, so signings and releases you make in the game are
+// recorded here and layered on top of the last export. A fresh export replaces them.
+state.changes = { file: "", added: [], released: [] };
+function applyChanges() {
+  const c = state.changes;
+  const gone = new Set(c.released);
+  const base = state.basePlayers.filter(p => !gone.has(p.type + "|" + p.name));
+  const added = c.added.map((a, i) => { const p = makePlayer(a.f, a.type, 1000 + i); p.isFA = false; p.signed = true; return p; });
+  state.players = [...base, ...added];
+  state.hitters = state.players.filter(p => p.type === "Hitter");
+  state.pitchers = state.players.filter(p => p.type === "Pitcher");
+  computeAll();
+}
+function saveChanges() { try { localStorage.setItem("csgg-changes", JSON.stringify(state.changes)); } catch (_) {} }
+function resetChanges(file) { state.changes = { file, added: [], released: [] }; saveChanges(); }
+function recordSign(f, type) { state.changes.added.push({ f: { ...f }, type, at: Date.now() }); state.changes.log = state.changes.log || []; state.changes.log.push({ kind: "sign", name: f.name || "Free agent", type }); }
+function recordRelease(p) {
+  state.changes.log = state.changes.log || [];
+  if (p.signed) {
+    const i = p.id - 1000;
+    const [entry] = state.changes.added.splice(i, 1);
+    state.changes.log.push({ kind: "release", name: p.name, type: p.type, restore: entry });
+  } else {
+    state.changes.released.push(p.type + "|" + p.name);
+    state.changes.log.push({ kind: "release", name: p.name, type: p.type, key: p.type + "|" + p.name });
+  }
+}
+function undoLast() {
+  const c = state.changes, last = (c.log || []).pop(); if (!last) return;
+  if (last.kind === "sign") { for (let i = c.added.length - 1; i >= 0; i--) if ((c.added[i].f.name || "Free agent") === last.name && c.added[i].type === last.type) { c.added.splice(i, 1); break; } }
+  else if (last.restore) c.added.push(last.restore);
+  else { const i = c.released.lastIndexOf(last.key); if (i >= 0) c.released.splice(i, 1); }
+}
+function changesBanner() {
+  const log = state.changes.log || [];
+  if (!log.length) return "";
+  return `<div class="notice info changes"><div><b>Moves since your export:</b> ${log.map(x => `<span class="pill ${x.kind === "sign" ? "keep" : "cut"}">${x.kind === "sign" ? "Signed" : "Released"} ${esc(x.name)}</span>`).join(" ")}</div>
+    <div class="controls"><button class="btn" type="button" data-action="undo">Undo last</button><button class="btn" type="button" data-action="clear-changes">Clear all</button>
+    <span class="small muted">Uploading a fresh export replaces these.</span></div></div>`;
+}
+
+function teamFromFile(f) {
+  const m = f.replace(/\.csv$/i, "").replace(/-roster.*$/i, "");
+  if (!m || m === f.replace(/\.csv$/i, "")) return "Scouting Desk";
+  return m.split(/[-_ ]+/).map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
+}
+
+// ---------------------------------------------------------------- the math
+const onBase = h => .5 * h.contact + .5 * h.eye;
+const powerS = h => .7 * h.power + .3 * h.contact;
+const running = p => .6 * p.speed + .4 * p.aware;
+function bat(h, mode = "ALL") {
+  let v = mode === "POWER" ? .25 * onBase(h) + .65 * powerS(h) + .10 * running(h)
+                           : .45 * onBase(h) + .40 * powerS(h) + .15 * running(h);
+  if (mode === "RHP" && (h.bats === "L" || h.bats === "S")) v *= 1 + state.platoon;
+  if (mode === "LHP" && (h.bats === "R" || h.bats === "S")) v *= 1 + state.platoon;
+  return v;
+}
+const canPlay = (h, pos) => pos === "DH" || h.pos1 === pos || h.pos2 === pos;
+function glove(h, pos) {
+  const prof = DEF_PROFILES[pos]; if (!prof) return 0;
+  let v = 0; for (const k in prof) v += prof[k] * h[k];
+  return h.pos1 === pos ? v : v * (1 - SECONDARY_PENALTY);
+}
+const defW = mode => mode === "POWER" ? 0.10 : state.defWeight;
+function slot(h, pos, mode) { const w = defW(mode); return pos === "DH" ? (1 - w) * bat(h, mode) : (1 - w) * bat(h, mode) + w * glove(h, pos); }
+
+const stuff = p => .38 * p.velo + .32 * p.acc + .30 * p.fin;
+const starter = p => .8 * stuff(p) + .2 * p.end;
+
+function computeAll() {
+  state.hitters.forEach(h => {
+    h.ob = onBase(h); h.pw = powerS(h); h.run = running(h); h.bat = bat(h);
+    const spots = FIELD.filter(p => canPlay(h, p));
+    h.bestPos = spots.sort((a, b) => glove(h, b) - glove(h, a))[0] || "DH";
+    h.glove = glove(h, h.bestPos);
+    h.value = .75 * h.bat + .25 * h.glove;
+  });
+  state.pitchers.forEach(p => {
+    p.stuff = stuff(p); p.sp = starter(p);
+    p.canStart = p.end >= MIN_SP_END;
+    p.value = p.canStart ? Math.max(p.sp, p.stuff * .97) : p.stuff;
+  });
+  state.lineups = { RHP: buildLineup("RHP"), LHP: buildLineup("LHP"), POWER: buildLineup("POWER") };
+  state.staff = buildStaff();
+  assignRoles();
+  computeStatus();
+}
+
+function buildLineup(mode) {
+  const H = state.hitters;
+  const cand = {};
+  FIELD.forEach(pos => cand[pos] = H.filter(h => canPlay(h, pos)).sort((a, b) => slot(b, pos, mode) - slot(a, pos, mode)));
+  const order = [...FIELD].sort((a, b) => cand[a].length - cand[b].length);
+  const ceil = order.map(pos => cand[pos][0] ? slot(cand[pos][0], pos, mode) : 0);
+  const bestDH = Math.max(0, ...H.map(h => slot(h, "DH", mode)));
+  let best = { total: -Infinity, picks: {} };
+  const used = new Set(), picks = {};
+  (function search(i, total) {
+    let c = total + bestDH; for (let k = i; k < order.length; k++) c += ceil[k];
+    if (c <= best.total) return;
+    if (i === order.length) {
+      const dh = H.filter(h => !used.has(h.id)).sort((a, b) => slot(b, "DH", mode) - slot(a, "DH", mode))[0];
+      const t = total + (dh ? slot(dh, "DH", mode) : 0);
+      if (t > best.total) best = { total: t, picks: { ...picks, DH: dh } };
+      return;
+    }
+    const pos = order[i]; let any = false;
+    for (const h of cand[pos]) {
+      if (used.has(h.id)) continue; any = true;
+      used.add(h.id); picks[pos] = h; search(i + 1, total + slot(h, pos, mode)); used.delete(h.id); delete picks[pos];
+    }
+    if (!any) search(i + 1, total);
+  })(0, 0);
+
+  const nine = ALL_POS.filter(pos => best.picks[pos]).map(pos => {
+    const h = best.picks[pos];
+    return { h, pos, b: bat(h, mode), gl: glove(h, pos) };
+  });
+  // Batting order: three best bats hit 1, 2, 4. Best on-base of them leads off, most power hits cleanup.
+  const pool = [...nine].sort((a, b) => b.b - a.b);
+  const lineup = new Array(9);
+  const top3 = pool.splice(0, 3);
+  top3.sort((a, b) => b.h.ob - a.h.ob); lineup[0] = { ...top3.shift(), role: "Leadoff: best on-base of your top 3" };
+  top3.sort((a, b) => b.h.pw - a.h.pw); lineup[3] = { ...top3.shift(), role: "Cleanup: most power of your top 3" };
+  lineup[1] = { ...top3.shift(), role: "Top-3 bat" };
+  const next2 = pool.splice(0, 2).sort((a, b) => a.h.pw - b.h.pw);
+  if (next2[0]) lineup[2] = { ...next2[0], role: "Next-best bat" };
+  if (next2[1]) lineup[4] = { ...next2[1], role: "Next-best bat, more power" };
+  for (let i = 5; i < 9 && pool.length; i++) lineup[i] = { ...pool.shift(), role: "" };
+  const order9 = lineup.filter(Boolean);
+  const inIds = new Set(order9.map(x => x.h.id));
+  const bench = H.filter(h => !inIds.has(h.id));
+
+  // Bench suggestions
+  // Bench suggestions. A sub takes over the starter's position, so he must be able to play it (anyone can replace the DH).
+  const subs = { def: [], runners: [], hitters: [] };
+  const fits = (h, s) => s.pos === "DH" || canPlay(h, s.pos);
+  order9.forEach(s => {
+    if (s.pos !== "DH") {
+      const alt = bench.filter(h => canPlay(h, s.pos)).sort((a, b) => glove(b, s.pos) - glove(a, s.pos))[0];
+      if (alt && glove(alt, s.pos) - s.gl >= 4) subs.def.push({ out: s.h, inn: alt, pos: s.pos, gain: glove(alt, s.pos) - s.gl });
+    }
+    const r = bench.filter(h => fits(h, s)).sort((a, b) => b.run - a.run)[0];
+    if (r && r.run - s.h.run >= 8) subs.runners.push({ out: s.h, inn: r, pos: s.pos, gain: r.run - s.h.run });
+    const ph = bench.filter(h => fits(h, s)).sort((a, b) => bat(b, mode) - bat(a, mode))[0];
+    if (ph && bat(ph, mode) - s.b >= 3) subs.hitters.push({ out: s.h, inn: ph, pos: s.pos, gain: bat(ph, mode) - s.b });
+  });
+  const uniq = list => { const u = new Set(); return list.sort((a, b) => b.gain - a.gain).filter(d => (u.has(d.inn.id) ? false : (u.add(d.inn.id), true))).slice(0, 3); };
+  subs.def = uniq(subs.def); subs.runners = uniq(subs.runners); subs.hitters = uniq(subs.hitters);
+  return { order: order9, bench, subs, total: best.total };
+}
+
+function buildStaff() {
+  const P = state.pitchers, used = new Set(), staff = [];
+  const rot = P.filter(p => p.canStart).sort((a, b) => b.sp - a.sp).slice(0, 5);
+  rot.forEach((p, i) => { used.add(p.id); staff.push({ p, group: "Rotation", label: `SP${i + 1}`, score: p.sp }); });
+  const pen = P.filter(p => !used.has(p.id)).sort((a, b) => b.stuff - a.stuff);
+  pen.splice(0, 2).forEach((p, i) => staff.push({ p, group: "Closers", label: `CL${i + 1}`, score: p.stuff }));
+  pen.forEach((p, i) => staff.push({ p, group: "Bullpen order", label: `${i + 1}`, mop: i >= pen.length - 2, score: p.stuff }));
+  return staff;
+}
+
+function assignRoles() {
+  const L = state.lineups;
+  state.hitters.forEach(h => {
+    const inR = L.RHP.order.some(s => s.h.id === h.id), inL = L.LHP.order.some(s => s.h.id === h.id);
+    const d = L.RHP.subs.def.find(x => x.inn.id === h.id);
+    if (inR && inL) h.role = "Everyday starter";
+    else if (inR) h.role = "Starts vs right-handers";
+    else if (inL) h.role = "Starts vs left-handers";
+    else if (d) h.role = `Late-inning glove (${d.pos})`;
+    else if (L.RHP.subs.runners.some(x => x.inn.id === h.id)) h.role = "Pinch runner";
+    else if (L.RHP.subs.hitters.some(x => x.inn.id === h.id)) h.role = "Pinch hitter";
+    else h.role = "Depth";
+  });
+  state.staff.forEach(s => {
+    s.p.role = s.group === "Rotation" ? `Starter (${s.label})` : s.group === "Closers" ? `Closer (${s.label})` : s.mop ? "Mop-up reliever" : `Reliever (#${s.label} in pen)`;
+  });
+}
+
+// ---------------------------------------------------------------- roster spots / release candidates
+// Players who start, sub, back up a position, pitch in the rotation, close, or sit in the top 6 of the
+// bullpen are kept. Everyone else gets a release order, weakest Value first.
+const KEEP_PEN = 6;
+function computeStatus() {
+  const L = state.lineups;
+  const inLine = (m, id) => L[m].order.some(s => s.h.id === id);
+  const subIds = new Set();
+  ["RHP", "LHP"].forEach(m => [...L[m].subs.def, ...L[m].subs.runners, ...L[m].subs.hitters].forEach(d => subIds.add(d.inn.id)));
+  const teamGames = Math.max(0, ...state.players.map(p => p.g || 0));
+
+  state.hitters.forEach(h => {
+    h.keep = true; h.cutRank = null;
+    const r = inLine("RHP", h.id), l = inLine("LHP", h.id);
+    if (r && l) h.why = "Starts every day";
+    else if (r || l) h.why = `Starts vs ${r ? "right" : "left"}-handers`;
+    else if (inLine("POWER", h.id)) h.why = "Starts in the power lineup";
+    else if (subIds.has(h.id)) h.why = "Late-inning sub";
+    else { h.keep = false; h.why = "Not in any lineup and not a recommended sub"; }
+  });
+  // Make sure every position has at least one backup who isn't starting vs right-handers.
+  const rhpIds = new Set(L.RHP.order.map(s => s.h.id));
+  FIELD.forEach(pos => {
+    const covered = state.hitters.some(h => h.keep && !rhpIds.has(h.id) && canPlay(h, pos));
+    if (covered) return;
+    const b = state.hitters.filter(h => !h.keep && canPlay(h, pos)).sort((a, c) => (.5 * bat(c) + .5 * glove(c, pos)) - (.5 * bat(a) + .5 * glove(a, pos)))[0];
+    if (b) { b.keep = true; b.why = `Only backup ${pos} worth keeping`; }
+  });
+  state.staff.forEach(s => {
+    const p = s.p;
+    p.cutRank = null;
+    if (s.group !== "Bullpen order") { p.keep = true; p.why = s.group === "Rotation" ? "In the rotation" : "Closer"; }
+    else if (Number(s.label) <= KEEP_PEN) { p.keep = true; p.why = `Bullpen arm #${s.label}`; }
+    else { p.keep = false; p.why = "Back of the bullpen: rarely pitches"; }
+  });
+  const locked = new Set(state.file === SAMPLE_FILE ? SAMPLE_LOCKED : []);
+  state.players.forEach(p => { p.locked = locked.has(p.name); if (p.locked && !p.keep) { p.keep = true; p.why = "Locked in the game, so he can't be released"; } });
+  const cands = state.players.filter(p => !p.keep).sort((a, b) => a.value - b.value);
+  cands.forEach((p, i) => {
+    p.cutRank = i + 1;
+    if (teamGames >= 10 && !p.g) p.why += `; 0 games so far`;
+  });
+}
+const RELEASE_FLAG = 4; // how many of the release order get the red flag
+function statusHTML(p) {
+  if (p.keep) return `<span class="pill keep" title="${esc(p.why)}">Keep${p.locked ? " 🔒" : ""}</span>`;
+  if (p.cutRank <= RELEASE_FLAG) return `<span class="pill cut" title="${esc(p.why)}">Release #${p.cutRank}</span>`;
+  return `<span class="pill depth" title="${esc(p.why)}">Depth · #${p.cutRank}</span>`;
+}
+
+// ---------------------------------------------------------------- tags & summaries
+function hitterTags(h) {
+  const t = [];
+  if (h.power >= 55) t.push(["Slugger", "plus", "Power 55+: lifts the ball for extra bases and homers."]);
+  if (h.contact >= 55) t.push(["Contact bat", "plus", "Contact 55+: few swings and misses, lots of line drives."]);
+  if (h.eye >= 54) t.push(["Good eye", "plus", "Plate discipline 54+: draws walks and squares the ball up."]);
+  if (h.speed >= 50) t.push(["Speed threat", "plus", "Speed 50+: beats out infield hits and takes extra bases."]);
+  if (h.bunt >= 55) t.push(["Bunter", "plus", "Bunting 55+: gets the bunt down reliably."]);
+  if (h.arm >= 52) t.push(["Strong arm", "plus", "Arm 52+: throws out runners."]);
+  if (["2B", "SS", "3B", "1B"].some(p => canPlay(h, p)) && h.flex >= 52) t.push(["Turns two", "plus", "Flexibility 52+ at an infield spot: helps turn double plays."]);
+  if (h.glove >= 50 && h.bat < 46) t.push(["Glove-first", "", "Fields well but the bat lags behind."]);
+  if (h.bat >= 50 && h.glove < 42) t.push(["Bat-first", "", "Hits well but is a liability in the field. A DH candidate."]);
+  if (h.aggr >= 55) t.push(["Aggressive", "", "Aggression 55+: pulls the ball and runs hard, sometimes into outs."]);
+  if (h.eye < 40) t.push(["Free swinger", "minus", "Plate discipline under 40: chases bad pitches, few walks."]);
+  if (h.contact < 40) t.push(["Swing and miss", "minus", "Contact under 40: strikes out a lot."]);
+  if (h.speed < 32) t.push(["Slow", "minus", "Speed under 32: easy to double up."]);
+  if (h.bats === "S") t.push(["Switch-hitter", "", "Bats from both sides."]);
+  return t;
+}
+function pitcherTags(p) {
+  const t = [];
+  if (p.velo >= 55) t.push(["Power arm", "plus", "Velocity 55+: misses bats and racks up strikeouts."]);
+  if (p.acc >= 55) t.push(["Command", "plus", "Accuracy 55+: rarely walks anyone."]);
+  if (p.fin >= 55) t.push(["Deceptive", "plus", "Finesse 55+: movement misses bats and keeps runners close."]);
+  if (p.end >= 70) t.push(["Workhorse", "plus", "Endurance 70+: can go deep into games."]);
+  if (p.end < 42) t.push(["Short stints", "", "Endurance under 42: best in one-inning relief."]);
+  if (p.acc < 40) t.push(["Wild", "minus", "Accuracy under 40: walks and wild pitches."]);
+  if (p.velo < 35) t.push(["Soft-tosser", "minus", "Velocity under 35: relies on location and movement."]);
+  if (p.throws === "L") t.push(["Lefty", "", "Throws left-handed."]);
+  return t;
+}
+const tagsFor = p => p.type === "Hitter" ? hitterTags(p) : pitcherTags(p);
+const tagHTML = (t, max = 99) => `<span class="tags">${t.slice(0, max).map(([l, c, d]) => `<span class="tag ${c}" title="${esc(d)}">${esc(l)}</span>`).join("")}</span>`;
+
+function ratingList(p) {
+  return p.type === "Hitter"
+    ? [["Contact", p.contact], ["Power", p.power], ["Plate discipline", p.eye], ["Bunting", p.bunt], ["Speed", p.speed], ["Awareness", p.aware], ["Aggression", p.aggr], ["Fielding range", p.range], ["Handling", p.handling], ["Arm strength", p.arm], ["Flexibility", p.flex]]
+    : [["Velocity", p.velo], ["Accuracy", p.acc], ["Finesse", p.fin], ["Endurance", p.end], ["Fielding range", p.range], ["Handling", p.handling], ["Arm strength", p.arm]];
+}
+function summary(p) {
+  const core = p.type === "Hitter"
+    ? [["contact", p.contact], ["power", p.power], ["plate discipline", p.eye], ["speed", p.speed], ["range", p.range], ["hands", p.handling], ["arm", p.arm]]
+    : [["velocity", p.velo], ["accuracy", p.acc], ["finesse", p.fin], ["endurance", p.end]];
+  const sorted = [...core].sort((a, b) => b[1] - a[1]);
+  const strong = sorted.filter(x => x[1] >= 50).slice(0, 2).map(x => x[0]);
+  const weak = sorted.reverse().filter(x => x[1] < 40).slice(0, 2).map(x => x[0]);
+  let s = "";
+  if (p.type === "Hitter") {
+    const kind = p.pw >= 52 && p.ob >= 50 ? "a middle-of-the-order bat" : p.pw >= 52 ? "a power bat" : p.ob >= 52 ? "an on-base type" : p.glove >= 50 ? "a defense-first player" : "a role player";
+    s = `${p.name.split(" ")[0]} profiles as ${kind}, best used at ${p.bestPos}.`;
+  } else {
+    const kind = p.canStart ? (p.stuff >= 50 ? "a front-half starter" : "a back-end starter or long man") : (p.velo >= 55 ? "a high-leverage reliever" : "a middle reliever");
+    s = `${p.name.split(" ")[0]} profiles as ${kind}.`;
+  }
+  if (strong.length) s += ` Leans on his ${strong.join(" and ")}.`;
+  if (weak.length) s += ` Watch the ${weak.join(" and ")}.`;
+  return s;
+}
+
+// ---------------------------------------------------------------- rest status
+function restInfo(p) {
+  if (!p.availableAt) return null;
+  const t = new Date(p.availableAt.replace(/(\.\d{3})\d+/, "$1"));
+  if (isNaN(t)) return null;
+  if (t <= new Date()) return { ready: true, text: "Rested" };
+  return { ready: false, text: "Ready " + t.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) };
+}
+const restHTML = p => { const r = restInfo(p); return r ? `<span class="rest ${r.ready ? "" : "tired"}">${r.text}</span>` : ""; };
+
+// ---------------------------------------------------------------- helpers
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+const posText = p => p.type === "Pitcher" ? p.pos1 : p.pos1 + (p.pos2 ? `/${p.pos2}` : "");
+const hand = p => p.type === "Hitter" ? `Bats ${p.bats || "?"}` : `Throws ${p.throws || "?"}`;
+const fmt3 = v => v == null ? "–" : v.toFixed(3).replace(/^0/, "");
+const fmt2 = v => v == null ? "–" : v.toFixed(2);
+function barHTML(v, lo = 30, hi = 62) {
+  const w = Math.max(4, Math.min(100, (v - lo) / (hi - lo) * 100));
+  return `<span class="bar"><span class="track"><i style="width:${w}%"></i></span><span class="num small">${v.toFixed(1)}</span></span>`;
+}
+const playerLink = p => `data-pid="${p.id}" tabindex="0"`;
+
+// ---------------------------------------------------------------- views
+function viewRoster() {
+  const H = state.hitters, P = state.pitchers;
+  const bestBat = [...H].sort((a, b) => b.bat - a.bat)[0];
+  const bestGlove = [...H].sort((a, b) => b.glove - a.glove)[0];
+  const ace = state.staff.find(s => s.label === "SP1")?.p;
+  const fastest = [...H].sort((a, b) => b.run - a.run)[0];
+  const ready = P.filter(p => restInfo(p)?.ready !== false).length;
+  const played = state.players.some(p => p.g > 0);
+
+  let rows = state.players.filter(p => state.filter === "all" || (state.filter === "h" ? p.type === "Hitter" : p.type === "Pitcher"));
+  if (state.search) rows = rows.filter(p => p.name.toLowerCase().includes(state.search.toLowerCase()));
+  const key = state.sort.key, dir = state.sort.dir;
+  const val = p => key === "name" ? p.name : key === "pos" ? posText(p) : key === "ovr" ? p.ovr : key === "value" ? p.value : key === "tier" ? ({ Gold: 3, Blue: 2, Green: 1 }[p.tier] || 0) : key === "cut" ? (p.keep ? 999 : p.cutRank) : (p[key] ?? -1);
+  rows.sort((a, b) => { const x = val(a), y = val(b); return (typeof x === "string" ? x.localeCompare(y) : x - y) * dir; });
+  const rankMap = new Map([...state.players].sort((a, b) => b.value - a.value).map((p, i) => [p.id, i + 1]));
+  const th = (k, label, cls = "") => `<th class="sortable ${cls}" data-sort="${k}" aria-sort="${state.sort.key === k ? (dir < 0 ? "descending" : "ascending") : "none"}">${label}</th>`;
+  const showH = state.filter === "h", showP = state.filter === "p";
+
+  return `
+  <div class="tiles">
+    ${bestBat ? `<button class="tile" ${playerLink(bestBat)}><span class="k">Best bat</span><span class="v">${esc(bestBat.name)} ${gr(bestBat.bat)}</span><span class="d">${posText(bestBat)} · ${hand(bestBat)}</span></button>` : ""}
+    ${ace ? `<button class="tile" ${playerLink(ace)}><span class="k">Ace</span><span class="v">${esc(ace.name)} ${gr(ace.sp)}</span><span class="d">${hand(ace)}${restInfo(ace) ? " · " + restInfo(ace).text : ""}</span></button>` : ""}
+    ${bestGlove ? `<button class="tile" ${playerLink(bestGlove)}><span class="k">Best glove</span><span class="v">${esc(bestGlove.name)} ${gr(bestGlove.glove)}</span><span class="d">at ${bestGlove.bestPos}</span></button>` : ""}
+    ${fastest ? `<button class="tile" ${playerLink(fastest)}><span class="k">Best baserunner</span><span class="v">${esc(fastest.name)} ${gr(fastest.run)}</span><span class="d">Speed ${fastest.speed} · Awareness ${fastest.aware}</span></button>` : ""}
+    <button class="tile" data-sort-cut="1"><span class="k">Release candidates</span><span class="v">${state.players.filter(p => !p.keep && p.cutRank <= RELEASE_FLAG).map(p => esc(p.name.split(" ").slice(-1)[0])).join(", ") || "None"}</span><span class="d">Click to sort by release order</span></button>
+    ${P.some(p => p.availableAt) ? `<div class="tile" style="cursor:default"><span class="k">Arms ready now</span><span class="v num">${ready} of ${P.length}</span><span class="d">From the rest times in this export</span></div>` : ""}
+  </div>
+  <div class="section-head">
+    <div><h2>Player rankings</h2><p class="lede" style="margin:0">Ranked by Value: hitting plus defense at each player's best spot, or for pitchers, how good they are in their best role. <b>Roster spot</b> shows who's needed: <span class="pill keep">Keep</span> players start, sub, back up a position or pitch regularly. Everyone else is <span class="pill depth">Depth</span>, numbered in release order, and the first ${RELEASE_FLAG} are flagged <span class="pill cut">Release</span>. Hover a pill for the reason. Click a player for his scouting report.</p></div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Show">
+        <button type="button" data-filter="h" aria-pressed="${state.filter === "h"}">Hitters</button>
+        <button type="button" data-filter="p" aria-pressed="${state.filter === "p"}">Pitchers</button>
+        <button type="button" data-filter="all" aria-pressed="${state.filter === "all"}">Everyone</button>
+      </div>
+      <input type="search" id="search" placeholder="Find a player" value="${esc(state.search)}" aria-label="Find a player">
+    </div>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      ${th("value", "#", "c")}${th("name", "Player")}${th("pos", "Pos")}${th("tier", "Pack")}${th("ovr", "OVR", "c")}${th("value", "Value")}
+      ${showH ? `${th("bat", "Bat", "c")}${th("ob", "On-base", "c")}${th("pw", "Power", "c")}${th("run", "Run", "c")}${th("glove", "Glove", "c")}` : ""}
+      ${showP ? `${th("stuff", "Stuff", "c")}${th("velo", "Velo", "c")}${th("acc", "Acc", "c")}${th("fin", "Fin", "c")}${th("end", "End", "c")}` : ""}
+      ${played ? `<th class="c">${showH ? "OPS" : showP ? "ERA" : "OPS / ERA"}</th>` : ""}
+      ${th("cut", "Roster spot")}<th>Best use</th><th>Tags</th>
+    </tr></thead>
+    <tbody>${rows.map(p => {
+      const isH = p.type === "Hitter";
+      return `<tr ${playerLink(p)}>
+        <td class="c rank">${rankMap.get(p.id)}</td>
+        <td class="name">${esc(p.name)}</td>
+        <td class="pos">${posText(p)} · ${isH ? p.bats : p.throws}</td>
+        <td class="small">${esc(p.tier)}</td>
+        <td class="c num">${p.ovr}</td>
+        <td>${barHTML(p.value)}</td>
+        ${showH ? `<td class="c">${gr(p.bat)}</td><td class="c">${gr(p.ob)}</td><td class="c">${gr(p.pw)}</td><td class="c">${gr(p.run)}</td><td class="c">${gr(p.glove)}</td>` : ""}
+        ${showP ? `<td class="c">${gr(p.stuff)}</td><td class="c">${gr(p.velo)}</td><td class="c">${gr(p.acc)}</td><td class="c">${gr(p.fin)}</td><td class="c">${gr(p.end)}</td>` : ""}
+        ${played ? `<td class="c num">${p.g > 0 ? (isH ? fmt3(p.stats.OPS) : fmt2(p.stats.ERA)) : "–"}</td>` : ""}
+        <td>${statusHTML(p)}</td>
+        <td class="small">${esc(p.role)}</td>
+        <td>${tagHTML(tagsFor(p), 3)}</td>
+      </tr>`;
+    }).join("")}</tbody>
+  </table></div>`;
+}
+
+function viewPositions() {
+  const starters = new Map(state.lineups.RHP.order.map(s => [s.pos, s.h.id]));
+  const cards = ALL_POS.map(pos => {
+    const list = state.hitters.filter(h => canPlay(h, pos))
+      .map(h => ({ h, v: pos === "DH" ? bat(h) : .75 * bat(h) + .25 * glove(h, pos), gl: glove(h, pos) }))
+      .sort((a, b) => b.v - a.v).slice(0, pos === "DH" ? 6 : 8);
+    return `<section class="card">
+      <div class="card-head"><h3>${pos === "DH" ? "Designated hitter" : pos}</h3><span class="meta">${pos === "DH" ? "Ranked by bat only" : "Bat + glove at " + pos}</span></div>
+      <ol class="list">${list.map((x, i) => `<li ${playerLink(x.h)} class="${starters.get(pos) === x.h.id ? "top" : ""}">
+          <span class="rank">${i + 1}</span>
+          <span><span class="name">${esc(x.h.name)}</span>${pos !== "DH" && x.h.pos1 !== pos ? '<span class="sec">2nd pos</span>' : ""}</span>
+          <span title="Bat">${gr(bat(x.h))}</span>
+          <span title="Glove">${pos === "DH" ? '<span class="gr" style="opacity:.4">–</span>' : gr(x.gl)}</span>
+        </li>`).join("")}</ol>
+    </section>`;
+  }).join("");
+  return `<div class="section-head"><div><h2>Depth chart by position</h2>
+    <p class="lede" style="margin:0">Everyone who can play each spot, best first. The two grades are Bat, then Glove at that position. The highlighted player starts there in your lineup vs right-handers. Playing a secondary position costs a little defense.</p></div></div>
+    <div class="grid">${cards}</div>`;
+}
+
+function lineupCard(title, note, L) {
+  return `<section class="card">
+    <div class="card-head"><h3>${title}</h3><span class="meta">${note}</span></div>
+    <ol class="list order">${L.order.map((s, i) => `<li ${playerLink(s.h)}>
+      <span class="rank">${i + 1}</span>
+      <span class="who"><span class="name">${esc(s.h.name)} <span class="pos">${s.h.bats}</span></span>${s.role ? `<span class="role">${s.role}</span>` : ""}</span>
+      <span class="pos">${s.pos}</span>
+      <span>${gr(s.b)}</span>
+    </li>`).join("")}</ol>
+    <p class="subhead">Automanager subs</p>
+    <div class="subs">
+      ${L.subs.def.map(d => `<div>Defense in save spots: <b>${esc(d.inn.name)}</b> for ${esc(d.out.name)} at ${d.pos} ${gr(glove(d.inn, d.pos))}</div>`).join("") || "<div class='muted'>No clear defensive upgrade on the bench.</div>"}
+      ${L.subs.runners.map(d => `<div>Pinch runner: <b>${esc(d.inn.name)}</b> for ${esc(d.out.name)} (${d.pos}) ${gr(d.inn.run)}</div>`).join("") || "<div class='muted'>Pinch runner: nobody on the bench who can take over a starter's position is clearly faster.</div>"}
+      ${L.subs.hitters.map(d => `<div>Pinch hitter: <b>${esc(d.inn.name)}</b> for ${esc(d.out.name)} (${d.pos}) ${gr(bat(d.inn, "ALL"))}</div>`).join("") || "<div class='muted'>Pinch hitter: no bench bat is clearly better than your starters. Leave these as None.</div>"}
+    </div>
+    <p class="bench"><b>Bench:</b> ${L.bench.map(h => esc(h.name)).join(", ")}</p>
+  </section>`;
+}
+function viewLineups() {
+  const L = state.lineups;
+  return `<div class="section-head"><div><h2>Lineups</h2>
+    <p class="lede" style="margin:0">The page tests every legal way to fill the nine spots and keeps the one with the best total of hitting and defense. Your best three bats hit 1st, 2nd and 4th because those spots come up most. Use the subs in the Automanager's Substitutions tab.</p></div></div>
+    <div class="settings">
+      <label for="platoon">Bonus for facing the opposite hand <output id="platoonOut">${Math.round(state.platoon * 100)}%</output>
+        <input type="range" id="platoon" min="0" max="15" step="1" value="${Math.round(state.platoon * 100)}"></label>
+      <label for="defw">How much defense counts <output id="defwOut">${Math.round(state.defWeight * 100)}%</output>
+        <input type="range" id="defw" min="0" max="50" step="5" value="${Math.round(state.defWeight * 100)}"></label>
+      <span class="small muted" style="max-width:46ch">The game's Help never says how much lefty vs. righty matters, so the bonus is a guess. Once you've played some games, compare your players' AVG vs LHP and vs RHP and adjust it.</span>
+    </div>
+    <div class="lineups">
+      ${lineupCard("vs right-handed starter", "Lefties & switch get the bonus", L.RHP)}
+      ${lineupCard("vs left-handed starter", "Righties & switch get the bonus", L.LHP)}
+      ${lineupCard("Power lineup", "Bats weighted toward slugging", L.POWER)}
+    </div>`;
+}
+
+function viewPitching() {
+  const groups = ["Rotation", "Closers", "Bullpen order"];
+  const notes = {
+    Rotation: "Starting pitchers with enough endurance, ranked mostly on stuff.",
+    Closers: "Two closers, so one is rested when the other needs a day off.",
+    "Bullpen order": "The game uses relievers from the top of this order. Mop-up arms come from the bottom.",
+  };
+  return `<div class="section-head"><div><h2>Pitching staff</h2>
+    <p class="lede" style="margin:0">Enter it on the Pitching tab in this order. Stuff blends Velocity, Accuracy and Finesse. Endurance only decides how deep a pitcher goes, so for starters it's a small part of the score. Rest times come from this export, compared to your clock right now.</p></div></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">${groups.map(g => `
+      <section class="card">
+        <div class="card-head"><h3>${g}</h3></div>
+        <p class="small muted" style="margin:0">${notes[g]}</p>
+        <ol class="list">${state.staff.filter(s => s.group === g).map(s => `<li ${playerLink(s.p)} style="grid-template-columns:34px 1fr auto auto">
+          <span class="rank">${s.label}</span>
+          <span><span class="name">${esc(s.p.name)}</span> <span class="pos">${s.p.throws}HP</span><br>${tagHTML(pitcherTags(s.p), 2)} ${s.mop ? '<span class="tag">Mop-up</span>' : ""}</span>
+          <span>${restHTML(s.p)}</span>
+          <span title="${g === "Rotation" ? "Starter grade" : "Stuff grade"}">${gr(s.score)}</span>
+        </li>`).join("")}</ol>
+      </section>`).join("")}</div>`;
+}
+
+function viewGuide() {
+  const scale = GRADE_SCALE.map(([t, g], i) => {
+    const hi = i === 0 ? "+" : `–${GRADE_SCALE[i - 1][0] - 1}`;
+    return `<span class="gr ${gClass(g)}">${g}</span><span class="small muted num" style="margin-right:8px">${t < 0 ? "<32" : t + (i === 0 ? "+" : hi)}</span>`;
+  }).join("");
+  return `<h2>How the grades work</h2>
+  <p class="lede">Every rating and blended score becomes a letter grade on one fixed scale, so a B is a B whether it's Power or Velocity. Grades go up as your players develop. Hover any grade on the page to see the number behind it.</p>
+  <div class="scale" style="margin-bottom:22px">${scale}</div>
+  <div class="guide">
+    <section class="card"><h3>Blended scores</h3><dl>
+      <dt>On-base</dt><dd>Contact and Plate discipline, half each. Getting on base and avoiding strikeouts.</dd>
+      <dt>Power</dt><dd>70% Power, 30% Contact. Extra-base hits and home runs.</dd>
+      <dt>Run</dt><dd>60% Speed, 40% Awareness. The Help says aware runners are safe more often.</dd>
+      <dt>Bat</dt><dd>45% On-base, 40% Power, 15% Run. The Power lineup shifts this toward Power.</dd>
+      <dt>Glove</dt><dd>Depends on the position. Catchers: Handling and Arm. Shortstops: Range first, then Arm, Handling and Flexibility. Center field: mostly Range. Flexibility only counts for infielders, because it only helps turn double plays.</dd>
+      <dt>Value (hitters)</dt><dd>75% Bat, 25% Glove at their best position.</dd>
+    </dl></section>
+    <section class="card"><h3>Pitching scores</h3><dl>
+      <dt>Stuff</dt><dd>38% Velocity, 32% Accuracy, 30% Finesse. Velocity and Finesse miss bats, Accuracy prevents walks.</dd>
+      <dt>Starter grade</dt><dd>80% Stuff, 20% Endurance. Pitchers need Endurance of ${MIN_SP_END}+ to make the rotation.</dd>
+      <dt>Reliever grade</dt><dd>Stuff only. Relievers only need to get a few outs.</dd>
+      <dt>Rest</dt><dd>Your export lists when each pitcher is available again. The page compares it to your current time.</dd>
+    </dl></section>
+    <section class="card"><h3>What each rating does in the game</h3><dl>
+      <dt>Contact / Power / Plate discipline</dt><dd>Putting the bat on the ball, driving it for extra bases, and reading the zone to draw walks.</dd>
+      <dt>Speed / Awareness / Aggression</dt><dd>Running speed, smart baserunning, and how hard a player pushes for extra bases (aggressive hitters also pull the ball).</dd>
+      <dt>Range / Handling / Arm / Flexibility</dt><dd>Ground covered, clean plays and fewer errors, throwing runners out, and turning double plays.</dd>
+      <dt>Velocity / Accuracy / Finesse / Endurance</dt><dd>Strikeouts, fewer walks, movement and deception, and how deep a pitcher can go before tiring.</dd>
+    </dl></section>
+    <section class="card"><h3>What this page can't know</h3>
+      <p class="small" style="margin:0">curveball.gg doesn't publish its formulas, so these weights are informed guesses based on its Help descriptions. Once games are played, this page shows OPS and ERA beside the grades. When the stats disagree with a grade over a decent sample, trust the stats.</p>
+    </section>
+  </div>`;
+}
+
+// ---------------------------------------------------------------- free agents
+let faTimer = null, faFlash = "";
+function blankFA(type) {
+  const keep = state.fa[type];
+  const f = { name: "", pos1: keep.pos1, pos2: "", hand: "R", age: "", tier: "Green" };
+  (type === "Hitter" ? H_FIELDS : P_FIELDS).forEach(([k]) => f[k] = "");
+  if (type === "Pitcher") { f.range = 40; f.handling = 40; f.arm = 40; }
+  state.fa[type] = f;
+}
+const H_FIELDS = [["contact", "Contact"], ["power", "Power"], ["eye", "Plate discipline"], ["bunt", "Bunting"], ["speed", "Speed"], ["aware", "Awareness"], ["aggr", "Aggression"], ["range", "Fielding range"], ["handling", "Handling"], ["arm", "Arm strength"], ["flex", "Flexibility"]];
+const P_FIELDS = [["velo", "Velocity"], ["acc", "Accuracy"], ["fin", "Finesse"], ["end", "Endurance"], ["range", "Fielding range"], ["handling", "Handling"], ["arm", "Arm strength"]];
+
+function faPlayer() { return makePlayer(state.fa[state.faType], state.faType, -1); }
+function makePlayer(f, type, id) {
+  const isH = type === "Hitter";
+  const n = k => Math.max(0, Math.min(100, Number(f[k]) || 0));
+  const p = {
+    id, isFA: true, name: (f.name || "").trim() || "Free agent", type,
+    pos1: f.pos1, pos2: f.pos2 && f.pos2 !== f.pos1 ? f.pos2 : "", age: f.age, tier: f.tier, prime: "", ovr: 0,
+    bats: isH ? f.hand : "", throws: isH ? "" : f.hand,
+    range: n("range"), handling: n("handling"), arm: n("arm"), flex: isH ? n("flex") : 0,
+    speed: isH ? n("speed") : 0, aggr: isH ? n("aggr") : 0, aware: isH ? n("aware") : 0,
+    g: 0, availableAt: "", stats: {}, splits: { L: [], R: [] },
+  };
+  if (isH) Object.assign(p, { contact: n("contact"), power: n("power"), eye: n("eye"), bunt: n("bunt") });
+  else Object.assign(p, { velo: n("velo"), acc: n("acc"), fin: n("fin"), end: n("end") });
+  return p;
+}
+
+function analyzeFA() {
+  const before = { lineups: state.lineups, staff: state.staff.map(s => ({ p: s.p, group: s.group, label: s.label })) };
+  const saved = { players: state.players, hitters: state.hitters, pitchers: state.pitchers };
+  const fa = faPlayer();
+  const res = { fa, modes: {}, staff: null, bumped: null, drop: null };
+  try {
+    state.players = [...saved.players, fa];
+    state.hitters = state.players.filter(p => p.type === "Hitter");
+    state.pitchers = state.players.filter(p => p.type === "Pitcher");
+    computeAll();
+    ["RHP", "LHP", "POWER"].forEach(m => {
+      const order = state.lineups[m].order, i = order.findIndex(s => s.h.id === -1);
+      if (i < 0) return;
+      const afterIds = new Set(order.map(s => s.h.id));
+      const out = before.lineups[m].order.find(s => !afterIds.has(s.h.id));
+      res.modes[m] = { spot: i + 1, pos: order[i].pos, out: out ? out.h : null, outPos: out ? out.pos : "" };
+    });
+    if (fa.type === "Pitcher") {
+      const se = state.staff.find(s => s.p.id === -1);
+      res.staff = { group: se.group, label: se.label };
+      const prev = before.staff.find(s => s.group === se.group && !state.staff.some(x => x.p.id === s.p.id && x.group === s.group));
+      if (se.group !== "Bullpen order" && prev) res.bumped = prev.p;
+    }
+    const others = state.players.filter(p => p.id !== -1 && !p.keep).sort((a, b) => a.cutRank - b.cutRank);
+    let d = others.find(p => p.type === fa.type) || (fa.type === "Pitcher" ? null : others[0]);
+    if (!d && fa.type === "Pitcher") d = state.pitchers.filter(p => p.id !== -1 && !p.locked).sort((a, b) => a.value - b.value)[0];
+    if (d) res.drop = { p: d, why: d.why };
+    res.faKeep = fa.keep; res.faWhy = fa.why; res.faCut = fa.cutRank;
+    if (fa.type === "Hitter") {
+      const pos = fa.pos1, list = state.hitters.filter(h => canPlay(h, pos)).sort((a, b) => (.75 * bat(b) + .25 * glove(b, pos)) - (.75 * bat(a) + .25 * glove(a, pos)));
+      res.posRank = { pos, rank: list.findIndex(h => h.id === -1) + 1, of: list.length };
+    }
+    res.rosterRank = [...state.players].sort((a, b) => b.value - a.value).findIndex(p => p.id === -1) + 1;
+    res.rosterSize = state.players.length;
+  } finally {
+    state.players = saved.players; state.hitters = saved.hitters; state.pitchers = saved.pitchers;
+    computeAll();
+  }
+  // The starter he would compete with (hitters) for the comparison table.
+  if (fa.type === "Hitter") {
+    const s = before.lineups.RHP.order.find(x => x.pos === fa.pos1);
+    res.incumbent = s ? s.h : null;
+  } else res.incumbent = res.bumped;
+  return res;
+}
+
+function verdictFor(r) {
+  const fa = r.fa, n = esc(fa.name), drop = r.drop?.p;
+  const pts = [];
+  let kind = "pass", word = "Pass", line = "";
+  const modeName = { RHP: "vs right-handers", LHP: "vs left-handers", POWER: "in the power lineup" };
+  Object.entries(r.modes).forEach(([m, x]) => pts.push(`Starts ${modeName[m]} at ${x.pos}, batting ${x.spot}${["st","nd","rd"][x.spot-1] || "th"}${x.out ? `, replacing ${esc(x.out.name)}${x.outPos !== x.pos ? ` (${x.outPos})` : ""}` : ""}.`));
+  if (fa.type === "Hitter") {
+    if (r.modes.RHP && r.modes.LHP) { kind = "sign"; word = "Sign"; line = `${n} would start every day.`; }
+    else if (r.modes.RHP || r.modes.LHP) { kind = "sign"; word = "Sign"; line = `${n} would be a platoon starter.`; }
+    else if (r.faKeep) { kind = drop && fa.value > drop.value ? "sign" : "maybe"; word = kind === "sign" ? "Sign" : "Maybe"; line = `${n} wouldn't start, but fills a role: ${esc(r.faWhy.toLowerCase())}.`; }
+    if (r.posRank) pts.push(`Ranks #${r.posRank.rank} of ${r.posRank.of} players who can play ${r.posRank.pos}.`);
+  } else {
+    const s = r.staff;
+    if (s.group === "Rotation") { kind = "sign"; word = "Sign"; line = `${n} would join the rotation as ${s.label}${r.bumped ? `, moving ${esc(r.bumped.name)} to the bullpen` : ""}.`; }
+    else if (s.group === "Closers") { kind = "sign"; word = "Sign"; line = `${n} would be ${s.label === "CL1" ? "your top closer" : "your second closer"}${r.bumped ? `, moving ${esc(r.bumped.name)} back to the bullpen` : ""}.`; }
+    else if (Number(s.label) <= KEEP_PEN) { kind = "sign"; word = "Sign"; line = `${n} would slot in at #${s.label} in your bullpen order and pitch regularly.`; }
+    else pts.push(`He'd sit at #${s.label} in the bullpen, behind the arms who actually pitch.`);
+  }
+  if (kind === "pass" && !line) {
+    if (drop && fa.value > drop.value + 0.5) { kind = "maybe"; word = "Maybe"; line = `${n} is better than your weakest depth player, but he wouldn't get playing time.`; pts.push("Only worth it if you'd rather have his upside than an empty spot's worth of difference. He'd develop slowly without at-bats or innings."); }
+    else { line = `${n} wouldn't play, and he'd be your #${r.faCut} release candidate himself.`; }
+  }
+  pts.push(`Overall he'd rank #${r.rosterRank} of ${r.rosterSize} on your roster by Value.`);
+  return { kind, word, line, pts };
+}
+
+function compareRows(r) {
+  const fa = r.fa, cols = [["Free agent", fa]];
+  if (r.incumbent && r.incumbent.id !== r.drop?.p.id) cols.push([fa.type === "Hitter" ? `Your ${fa.pos1}` : "He'd bump", r.incumbent]);
+  if (r.drop) cols.push(["Release pick", r.drop.p]);
+  const rows = fa.type === "Hitter"
+    ? [["Value", p => barHTML(p.value)], ["Bat", p => gr(p.bat)], ["On-base", p => gr(p.ob)], ["Power", p => gr(p.pw)], ["Run", p => gr(p.run)],
+       [`Glove at ${fa.pos1}`, p => canPlay(p, fa.pos1) ? gr(glove(p, fa.pos1)) : '<span class="muted small">Can\'t play it</span>'], ["Positions", p => posText(p)], ["Bats", p => p.bats || "–"], ["Age · Pack", p => `${p.age ?? "?"} · ${esc(p.tier || "?")}`]]
+    : [["Value", p => barHTML(p.value)], ["Stuff", p => gr(p.stuff)], ["Starter grade", p => p.canStart ? gr(p.sp) : '<span class="muted small">Not enough endurance</span>'],
+       ["Velocity", p => gr(p.velo)], ["Accuracy", p => gr(p.acc)], ["Finesse", p => gr(p.fin)], ["Endurance", p => gr(p.end)], ["Throws", p => p.throws || "–"], ["Age · Pack", p => `${p.age ?? "?"} · ${esc(p.tier || "?")}`]];
+  return `<div class="table-wrap"><table class="compare"><thead><tr><th></th>${cols.map(([h, p]) => `<th>${h}<br><span style="text-transform:none;letter-spacing:0;font:600 14px var(--font-body);color:var(--ink)">${esc(p.name)}</span></th>`).join("")}</tr></thead>
+    <tbody>${rows.map(([k, f]) => `<tr><td class="muted small">${k}</td>${cols.map(([, p]) => `<td>${f(p)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+
+function renderFAResult() {
+  const box = document.getElementById("faResult"); if (!box) return;
+  const f = state.fa[state.faType];
+  const missing = (state.faType === "Hitter" ? H_FIELDS : P_FIELDS).slice(0, state.faType === "Hitter" ? 11 : 4).filter(([k]) => f[k] === "" || f[k] == null);
+  if (missing.length) {
+    box.innerHTML = `${faFlash ? `<div class="notice info">${faFlash}</div>` : ""}<div class="card"><h3>Waiting for ratings</h3><p style="margin:0" class="muted">Fill in ${missing.length === 1 ? missing[0][1] : missing.length + " more ratings"} to see a verdict.</p></div>`;
+    return;
+  }
+  const r = analyzeFA(), v = verdictFor(r);
+  const count = state.players.length, limit = state.rosterLimit ?? ROSTER_MAX, open = limit - count;
+  const pitchersFull = r.fa.type === "Pitcher" && state.pitchers.length >= PITCHER_MAX;
+  const dropLine = r.drop
+    ? (open > 0
+      ? `You have ${open} open spot${open === 1 ? "" : "s"}, so no release is needed. If you need a spot later, the first to go would be <b>${esc(r.drop.p.name)}</b> (${posText(r.drop.p)}).`
+      : `Your roster is full (${count} of ${limit}). ${v.kind === "pass" ? "If you sign him anyway, release" : "To sign him, release"} <b>${esc(r.drop.p.name)}</b> (${posText(r.drop.p)}). ${esc(r.drop.why)}.`)
+    : "Everyone on your roster has a role, so there's no obvious player to release.";
+  const pitcherNote = pitchersFull ? ` <b>You're at the ${PITCHER_MAX}-pitcher limit, so the release has to be a pitcher.</b>` : "";
+  const fa = r.fa;
+  const tags = tagsFor(fa);
+  box.innerHTML = `${faFlash ? `<div class="notice info">${faFlash}</div>` : ""}
+    <div class="verdict ${v.kind}"><span class="big">${v.word}</span><span>${v.line}</span></div>
+    <ul class="points">${v.pts.map(x => `<li>${x}</li>`).join("")}</ul>
+    ${tags.length ? tagHTML(tags) : ""}
+    <div class="card" style="gap:6px"><h3>Who to release</h3><p style="margin:0">${dropLine}${pitcherNote}</p><p class="small muted" style="margin:0">The game won't let you drop a locked player. If ${r.drop ? esc(r.drop.p.name) : "he"} shows a lock on your Roster page, pick the next player in release order on the Rankings tab.</p></div>
+    <div class="card" style="gap:8px"><h3>What did you do?</h3>
+      <p class="small muted" style="margin:0">Record it here so the next card is checked against your real roster.</p>
+      <div class="controls">
+        ${r.drop && (open <= 0 || pitchersFull) ? `<button class="btn primary-green" type="button" data-action="sign-drop" data-drop="${r.drop.p.id}">Signed him, released ${esc(r.drop.p.name)}</button>` : ""}
+        <button class="btn" type="button" data-action="sign">${r.drop && (open <= 0 || pitchersFull) ? "Signed him, released someone else" : "Signed him"}</button>
+        <button class="btn" type="button" data-action="skip">Passed, next card</button>
+      </div>
+    </div>
+    ${compareRows(r)}`;
+}
+
+function viewFreeAgent() {
+  const isH = state.faType === "Hitter", f = state.fa[state.faType];
+  const posOpts = (isH ? FIELD : ["SP", "MR", "CL"]);
+  const opt = (list, cur, blank) => (blank ? `<option value="">None</option>` : "") + list.map(x => `<option value="${x}" ${x === cur ? "selected" : ""}>${x}</option>`).join("");
+  const num = (k, label) => `<label class="field" for="fa-${k}">${label}<input type="number" id="fa-${k}" data-field="${k}" min="0" max="100" inputmode="numeric" value="${esc(f[k])}"></label>`;
+  return `<div class="section-head"><div><h2>Free agent check</h2>
+    <p class="lede" style="margin:0">Type in a free agent's ratings from the Free Agents list, the Speakeasy or Roulette. The page adds him to your roster, rebuilds your lineups and pitching staff, and tells you whether he'd play and who to release to make room.</p></div></div>
+  <div class="fa-layout">
+    <form class="card" id="faForm" onsubmit="return false">
+      <div class="seg" role="group" aria-label="Player type" style="justify-self:start">
+        <button type="button" data-fatype="Hitter" aria-pressed="${isH}">Hitter</button>
+        <button type="button" data-fatype="Pitcher" aria-pressed="${!isH}">Pitcher</button>
+      </div>
+      <div class="form-grid">
+        <label class="field wide" for="fa-name">Name<input type="text" id="fa-name" data-field="name" value="${esc(f.name)}" autocomplete="off"></label>
+        <label class="field" for="fa-pos1">Position<select id="fa-pos1" data-field="pos1">${opt(posOpts, f.pos1)}</select></label>
+        ${isH ? `<label class="field" for="fa-pos2">2nd position<select id="fa-pos2" data-field="pos2">${opt(FIELD, f.pos2, true)}</select></label>` : ""}
+        <label class="field" for="fa-hand">${isH ? "Bats" : "Throws"}<select id="fa-hand" data-field="hand">${opt(isH ? ["R", "L", "S"] : ["R", "L"], f.hand)}</select></label>
+        <label class="field" for="fa-age">Age<input type="number" id="fa-age" data-field="age" min="15" max="45" value="${esc(f.age)}"></label>
+        <label class="field" for="fa-tier">Pack<select id="fa-tier" data-field="tier">${opt(["Green", "Blue", "Gold"], f.tier)}</select></label>
+      </div>
+      <p class="subhead">Ratings</p>
+      <div class="form-grid">${(isH ? H_FIELDS : P_FIELDS).map(([k, l]) => num(k, l)).join("")}</div>
+      <p class="subhead">Your roster</p>
+      <div class="form-grid">
+        <label class="field" for="fa-limit">Roster limit<input type="number" id="fa-limit" data-field="rosterLimit" min="1" max="99" value="${state.rosterLimit ?? ROSTER_MAX}"></label>
+        <span class="small muted" style="align-self:end">You have ${state.players.length} players and ${state.pitchers.length} of ${PITCHER_MAX} pitchers. The game's limits are ${ROSTER_MAX} players and ${PITCHER_MAX} pitchers, with a minimum of 25 and 5.</span>
+      </div>
+    </form>
+    <div id="faResult" style="display:grid;gap:12px"></div>
+  </div>`;
+}
+
+// ---------------------------------------------------------------- drawer
+function openPlayer(id) {
+  const p = state.players.find(x => x.id === id); if (!p) return;
+  const isH = p.type === "Hitter";
+  const posGrades = isH ? FIELD.filter(pos => canPlay(p, pos)).map(pos => `<span class="tag">${pos} ${gr(glove(p, pos))}</span>`).join(" ") : "";
+  const blends = isH
+    ? [["Bat", p.bat], ["On-base", p.ob], ["Power", p.pw], ["Run", p.run], ["Glove", p.glove]]
+    : [["Stuff", p.stuff], ["Starter", p.sp], ["Endurance", p.end]];
+  let stats = "";
+  if (p.g > 0) {
+    const s = p.stats;
+    stats = isH
+      ? `<h3>Season</h3><div class="statgrid">${[["G", p.g], ["PA", s.PA], ["AVG", fmt3(s.AVG)], ["OBP", fmt3(s.OBP)], ["SLG", fmt3(s.SLG)], ["OPS", fmt3(s.OPS)], ["HR", s.HR], ["SB", s.SB]].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v ?? "–"}</div></div>`).join("")}</div>
+         <p class="small muted" style="margin:0">vs LHP ${p.splits.L.map(fmt3).join(" / ")} · vs RHP ${p.splits.R.map(fmt3).join(" / ")} (AVG / OBP / SLG)</p>`
+      : `<h3>Season</h3><div class="statgrid">${[["G", p.g], ["IP", s.IP], ["W-L", `${s.W ?? 0}-${s.L ?? 0}`], ["SV", s.SV], ["ERA", fmt2(s.ERA)], ["WHIP", fmt2(s.WHIP)], ["K/9", fmt2(s.K9)], ["BB/9", fmt2(s.BB9)]].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v ?? "–"}</div></div>`).join("")}</div>
+         <p class="small muted" style="margin:0">vs LHB ERA ${fmt2(p.splits.L[0])} · vs RHB ERA ${fmt2(p.splits.R[0])}</p>`;
+  } else stats = `<p class="small muted" style="margin:0">No games played yet. Season stats and lefty/righty splits will show here once he plays.</p>`;
+
+  const d = document.getElementById("drawer");
+  d.innerHTML = `
+    <button class="btn close" type="button" id="closeDrawer">Close</button>
+    <div style="padding-right:76px">
+      <div class="pos">${posText(p)} · ${hand(p)} · Age ${p.age ?? "?"} · ${esc(p.tier)} pack · ${esc(p.prime)}</div>
+      <h2>${esc(p.name)}</h2>
+      <div class="small"><b>${esc(p.role)}</b> · OVR ${p.ovr} ${isH ? "" : restHTML(p)}</div>
+      <div class="small" style="margin-top:6px">${statusHTML(p)} <span class="muted">${esc(p.why)}</span></div>
+    </div>
+    <p class="summary">${esc(summary(p))}</p>
+    ${tagHTML(tagsFor(p))}
+    <div class="tags">${blends.map(([k, v]) => `<span class="tag">${k} ${gr(v)}</span>`).join(" ")}</div>
+    ${posGrades ? `<div><p class="subhead">Glove by position</p><div class="tags">${posGrades}</div></div>` : ""}
+    <div><p class="subhead">Ratings</p><div class="ratings">${ratingList(p).map(([k, v]) => {
+      const g = grade(v);
+      return `<div class="rating"><span>${k}</span><span class="track"><span class="fill ${gClass(g)}" style="display:block;width:${Math.min(100, v)}%"></span></span><span class="num small">${v}</span><span class="gr ${gClass(g)}">${g}</span></div>`;
+    }).join("")}</div></div>
+    ${stats}
+    <div class="card" style="gap:6px"><p class="small muted" style="margin:0">Released or shoeboxed him in the game? Record it so the page stops counting him.</p>
+      <button class="btn danger" type="button" data-action="release" data-pid="${p.id}" style="justify-self:start">I released him</button></div>`;
+  d.classList.add("open"); d.setAttribute("aria-hidden", "false");
+  document.getElementById("overlay").classList.add("open");
+  document.getElementById("closeDrawer").focus();
+}
+function closeDrawer() {
+  const d = document.getElementById("drawer");
+  d.classList.remove("open"); d.setAttribute("aria-hidden", "true");
+  document.getElementById("overlay").classList.remove("open");
+}
+
+function handleAction(el) {
+  const a = el.dataset.action, type = state.faType, f = state.fa[type];
+  const name = (f.name || "").trim() || "Free agent";
+  if (a === "sign" || a === "sign-drop") {
+    recordSign(f, type);
+    let msg = `Recorded: signed <b>${esc(name)}</b>`;
+    if (a === "sign-drop") {
+      const p = state.players.find(x => x.id === Number(el.dataset.drop));
+      if (p) { recordRelease(p); msg += `, released <b>${esc(p.name)}</b>`; }
+    } else msg += `. If you released someone, open his card in Rankings and press "I released him".`;
+    finishMove(msg + ". Ready for the next card.");
+    blankFA(type); render(); return;
+  }
+  if (a === "skip") { faFlash = `Passed on <b>${esc(name)}</b>. Ready for the next card.`; blankFA(type); render(); return; }
+  if (a === "release") {
+    const p = state.players.find(x => x.id === Number(el.dataset.pid)); if (!p) return;
+    recordRelease(p); closeDrawer(); finishMove(`Recorded: released <b>${esc(p.name)}</b>.`); render(); return;
+  }
+  if (a === "undo") { undoLast(); finishMove("Undid the last move."); render(); return; }
+  if (a === "clear-changes") { resetChanges(state.file); applyChanges(); faFlash = ""; render(); return; }
+}
+function finishMove(msg) { saveChanges(); applyChanges(); faFlash = msg; }
+
+// ---------------------------------------------------------------- render & events
+const VIEWS = { "free-agent": viewFreeAgent, roster: viewRoster, positions: viewPositions, lineups: viewLineups, pitching: viewPitching, guide: viewGuide };
+let errorMsg = "";
+function render() {
+  document.querySelectorAll(".tabs a").forEach(a => a.setAttribute("aria-current", a.getAttribute("href") === "#" + state.view ? "page" : "false"));
+  document.getElementById("teamName").textContent = state.team || "Scouting Desk";
+  document.getElementById("fileLine").innerHTML = state.file
+    ? `<b>${state.hitters.length}</b> hitters · <b>${state.pitchers.length}</b> pitchers · ${esc(state.file)}${(state.changes.log || []).length ? ` · <b>${state.changes.log.length}</b> move${state.changes.log.length === 1 ? "" : "s"} since` : ""}`
+    : "No roster loaded";
+  const main = document.getElementById("main");
+  main.innerHTML = (errorMsg ? `<div class="notice" role="alert">${esc(errorMsg)}</div>` : "") + changesBanner() + (state.players.length ? VIEWS[state.view]() : "");
+  if (state.view === "free-agent" && state.players.length) renderFAResult();
+}
+
+function route() { const h = location.hash.slice(1); state.view = VIEWS[h] ? h : "roster"; render(); }
+window.addEventListener("hashchange", route);
+
+document.getElementById("main").addEventListener("click", e => {
+  const s = e.target.closest("[data-sort]");
+  if (s) { const k = s.dataset.sort; state.sort = { key: k, dir: state.sort.key === k ? -state.sort.dir : (k === "name" || k === "pos" ? 1 : -1) }; render(); return; }
+  const act = e.target.closest("[data-action]");
+  if (act) { handleAction(act); return; }
+  if (e.target.closest("[data-sort-cut]")) { state.filter = "all"; state.sort = { key: "cut", dir: 1 }; render(); return; }
+  const tbtn = e.target.closest("[data-fatype]");
+  if (tbtn) { state.faType = tbtn.dataset.fatype; render(); return; }
+  const f = e.target.closest("[data-filter]");
+  if (f) { state.filter = f.dataset.filter; if (!["value","name","pos","ovr","tier"].includes(state.sort.key)) state.sort = { key: "value", dir: -1 }; render(); return; }
+  const p = e.target.closest("[data-pid]");
+  if (p) openPlayer(Number(p.dataset.pid));
+});
+document.getElementById("main").addEventListener("input", e => {
+  if (e.target.closest("#faForm")) {
+    const k = e.target.dataset.field; if (!k) return;
+    if (k === "rosterLimit") { const v = parseInt(e.target.value, 10); state.rosterLimit = Number.isFinite(v) ? v : null; }
+    else { const v = e.target.type === "number" ? (e.target.value === "" ? "" : Number(e.target.value)) : e.target.value; state.fa[state.faType][k] = v; faFlash = ""; }
+    clearTimeout(faTimer); faTimer = setTimeout(renderFAResult, 120);
+    return;
+  }
+  if (e.target.id === "search") {
+    state.search = e.target.value; const pos = e.target.selectionStart; render();
+    const el = document.getElementById("search"); el.focus(); el.setSelectionRange(pos, pos);
+  }
+  if (e.target.id === "platoon" || e.target.id === "defw") {
+    if (e.target.id === "platoon") state.platoon = e.target.value / 100; else state.defWeight = e.target.value / 100;
+    computeAll(); render();
+    const el = document.getElementById(e.target.id); el && el.focus();
+  }
+});
+document.getElementById("main").addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.matches("tr[data-pid], li[data-pid]")) openPlayer(Number(e.target.dataset.pid));
+});
+document.getElementById("overlay").addEventListener("click", closeDrawer);
+document.getElementById("drawer").addEventListener("click", e => {
+  if (e.target.id === "closeDrawer") closeDrawer();
+  const act = e.target.closest("[data-action]"); if (act) handleAction(act);
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+
+function readFile(file) {
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const prev = state.changes; resetChanges(file.name);
+      try { loadRoster(String(r.result), file.name); } catch (err) { state.changes = prev; saveChanges(); throw err; }
+      errorMsg = ""; faFlash = "";
+      try { localStorage.setItem("csgg-roster", JSON.stringify({ text: r.result, name: file.name, at: Date.now() })); } catch (_) {}
+    } catch (err) { errorMsg = err.message + " Your previous roster is still shown."; }
+    render();
+  };
+  r.onerror = () => { errorMsg = "Couldn't read that file. Try exporting it again."; render(); };
+  r.readAsText(file);
+}
+document.getElementById("uploadBtn").addEventListener("click", () => document.getElementById("fileInput").click());
+document.getElementById("fileInput").addEventListener("change", e => { readFile(e.target.files[0]); e.target.value = ""; });
+document.getElementById("resetBtn").addEventListener("click", () => {
+  resetChanges(SAMPLE_FILE); loadRoster(SAMPLE_CSV, SAMPLE_FILE); errorMsg = ""; faFlash = "";
+  try { localStorage.removeItem("csgg-roster"); } catch (_) {}
+  render();
+});
+let dragDepth = 0;
+window.addEventListener("dragenter", e => { e.preventDefault(); dragDepth++; document.body.classList.add("dragging"); });
+window.addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove("dragging"); } });
+window.addEventListener("dragover", e => e.preventDefault());
+window.addEventListener("drop", e => { e.preventDefault(); dragDepth = 0; document.body.classList.remove("dragging"); readFile(e.dataTransfer.files[0]); });
+
+// Start with the last uploaded roster in this browser, or the sample.
+(function init() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem("csgg-roster") || "null"); } catch (_) {}
+  if (saved && !(saved.at > SAMPLE_AT)) saved = null; // a newer read from Claude replaces an older upload
+  let ch = null;
+  try { ch = JSON.parse(localStorage.getItem("csgg-changes") || "null"); } catch (_) {}
+  const file = saved ? saved.name : SAMPLE_FILE;
+  state.changes = ch && ch.file === file ? ch : { file, added: [], released: [] };
+  try { if (saved) loadRoster(saved.text, saved.name); else loadRoster(SAMPLE_CSV, SAMPLE_FILE); }
+  catch (_) { state.changes = { file: SAMPLE_FILE, added: [], released: [] }; loadRoster(SAMPLE_CSV, SAMPLE_FILE); }
+  route();
+})();
+</script>
+</body>
+</html>
