@@ -67,7 +67,7 @@ header.board { background: #10261a; color: #f1f5f0; border-bottom: 4px solid #f0
 .btn.primary:hover { filter: brightness(1.06); }
 .btn.ghost { background: transparent; color: #d7e3da; border-color: #3c5a47; }
 .drop-hint { font-size: 12px; color: #9fb4a5; }
-body.dragging::after { content: "Drop your roster CSV anywhere"; position: fixed; inset: 0; display: grid; place-items: center; background: rgba(13,30,20,.82); color: #f0bf4c; font: 700 34px var(--font-display); text-transform: uppercase; letter-spacing: .05em; z-index: 50; }
+body.dragging::after { content: "Drop a roster CSV or a card screenshot"; position: fixed; inset: 0; display: grid; place-items: center; background: rgba(13,30,20,.82); color: #f0bf4c; font: 700 34px var(--font-display); text-transform: uppercase; letter-spacing: .05em; z-index: 50; }
 
 nav.tabs { background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 10; }
 .tabs-inner { max-width: 1240px; margin: 0 auto; padding: 0 12px; display: flex; gap: 2px; overflow-x: auto; }
@@ -108,6 +108,13 @@ h3 { font: 700 18px/1.1 var(--font-display); text-transform: uppercase; letter-s
 .pill.keep { color: var(--g-a); background: var(--g-a-bg); }
 .pill.depth { color: var(--muted); background: color-mix(in srgb, var(--muted) 14%, transparent); }
 .pill.cut { color: var(--g-d); background: var(--g-d-bg); }
+.pill.farm { color: var(--g-b); background: var(--g-b-bg); }
+.pill.callup { color: var(--accent-ink); background: var(--accent); }
+.clubs { margin-left: auto; align-self: center; display: flex; gap: 8px; align-items: center; padding-left: 12px; }
+.clubs .seg button { padding: 5px 12px; font-weight: 600; white-space: nowrap; }
+.upload-prompt { max-width: 640px; }
+.farm-card { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: end; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; }
+.farm-card .field { min-width: 120px; }
 .fa-layout { display: grid; gap: 16px; grid-template-columns: minmax(300px, 400px) 1fr; align-items: start; }
 @media (max-width: 860px) { .fa-layout { grid-template-columns: 1fr; } }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
@@ -204,6 +211,39 @@ input[type="range"] { accent-color: var(--accent); width: 180px; }
 .stat .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .stat .v { font: 600 15px var(--font-num); }
 
+/* Ask Claude */
+.needs-claude { display: none !important; }
+body.has-claude .needs-claude { display: inline-flex !important; }
+body.has-claude .needs-claude.block { display: grid !important; }
+.coach { position: fixed; right: 16px; bottom: 16px; width: min(420px, calc(100% - 32px)); height: min(600px, calc(100% - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.25); z-index: 45; display: none; grid-template-rows: auto 1fr auto; overflow: hidden; }
+.coach.open { display: grid; }
+.coach-head { background: #10261a; color: #f1f5f0; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 3px solid #f0bf4c; }
+.coach-head h3 { color: #f1f5f0; }
+.coach-head .btn { padding: 3px 10px; background: transparent; color: #d7e3da; border-color: #3c5a47; }
+.coach-log { overflow-y: auto; padding: 14px; display: grid; gap: 10px; align-content: start; }
+.msg { padding: 9px 12px; border-radius: 10px; font-size: 14.5px; line-height: 1.5; max-width: 92%; }
+.msg.user { justify-self: end; background: var(--accent); color: var(--accent-ink); }
+.msg.ai { justify-self: start; background: var(--bg); border: 1px solid var(--line); }
+.msg.ai p { margin: 0 0 6px; } .msg.ai p:last-child { margin: 0; }
+.msg.ai ul { margin: 4px 0 6px; padding-left: 18px; }
+.msg.err { background: var(--g-d-bg); color: var(--ink); border: 1px solid var(--g-d); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 4px 10px; font-size: 13px; cursor: pointer; text-align: left; }
+.chip:hover { border-color: var(--accent); }
+.coach-form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--line); }
+.coach-form textarea { flex: 1; resize: none; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 8px; padding: 8px 10px; font: inherit; height: 44px; }
+.ask-fab { position: fixed; right: 16px; bottom: 16px; z-index: 44; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+
+/* Card reader */
+.needs-images { display: none !important; }
+body.has-images .needs-images { display: grid !important; }
+.reader { border: 2px dashed var(--line); border-radius: 10px; padding: 12px 14px; gap: 8px; background: var(--surface); margin-bottom: 14px; }
+.reader.busy { border-color: var(--accent); }
+.reader img { max-height: 90px; max-width: 160px; border-radius: 6px; border: 1px solid var(--line); }
+.reader .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+table.pack td, table.pack th { padding: 6px 10px; }
+table.pack tbody tr { cursor: default; }
+
 /* Guide */
 .guide { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
 .guide dl { margin: 0; display: grid; gap: 8px; }
@@ -243,20 +283,27 @@ input[type="range"] { accent-color: var(--accent); width: 180px; }
     <a href="#pitching">Pitching</a>
     <a href="#free-agent">Free agents</a>
     <a href="#guide">How grades work</a>
+    <div class="clubs" id="clubSwitch"></div>
   </div>
 </nav>
 <main id="main"></main>
 
+<button class="btn primary ask-fab needs-claude" id="askFab" type="button">Ask Claude</button>
+<section class="coach" id="coach" aria-label="Ask Claude about your roster">
+  <div class="coach-head"><h3>Ask Claude</h3><span style="display:flex;gap:6px"><button class="btn" type="button" id="coachClear">New chat</button><button class="btn" type="button" id="coachClose">Close</button></span></div>
+  <div class="coach-log" id="coachLog" aria-live="polite"></div>
+  <form class="coach-form" id="coachForm"><label for="coachInput" class="small" style="position:absolute;left:-9999px">Your question</label><textarea id="coachInput" placeholder="Why should I drop Phelps instead of Choi?"></textarea><button class="btn primary" type="submit">Ask</button></form>
+</section>
 <div class="overlay" id="overlay"></div>
 <aside class="drawer" id="drawer" aria-hidden="true" aria-label="Player details"></aside>
 
 <script>
-const SAMPLE_CSV = "Name,Type,Primary position,Secondary position,Age,Bats,Throws,Pack tier,Prime,Available at (UTC),Overall (OVR),Contact,Power,Plate discipline,Bunting,Velocity,Accuracy,Finesse,Endurance,Fielding range,Handling,Arm strength,Flexibility,Speed,Aggression,Awareness,Games (G),Plate appearances (PA),At-bats (AB),Runs (R),Hits (H),Doubles (2B),Triples (3B),Home runs (HR),Runs batted in (RBI),Walks (BB),Strikeouts (SO),Stolen bases (SB),Caught stealing (CS),Batting average (AVG),On-base pct (OBP),Slugging (SLG),OPS,AVG vs LHP,OBP vs LHP,SLG vs LHP,AVG vs RHP,OBP vs RHP,SLG vs RHP,Wins (W),Losses (L),Saves (SV),Blown saves (BS),Innings pitched (IP),Batters faced (BF),Hits allowed,Earned runs (ER),Walks allowed,Strikeouts,Home runs allowed,ERA,WHIP,K/9,BB/9,ERA vs LHB,WHIP vs LHB,ERA vs RHB,WHIP vs RHB\nSebastian Ortega,Hitter,C,1B,20,R,R,Blue,Rising,,50,58,49,56,53,,,,,39,55,39,59,33,43,57,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nEfrain Slater,Hitter,CF,RF,20,R,L,Blue,Rising,,49,57,57,41,60,,,,,38,48,39,37,35,38,48,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nOctavio Kondo,Hitter,1B,C,20,L,L,Green,Rising,,49,56,55,51,41,,,,,38,47,54,49,37,35,40,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nLeon Castillo,Hitter,CF,,19,L,R,Blue,Rising,,48,54,47,37,49,,,,,45,53,44,40,43,49,55,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nLeon Holmes,Hitter,1B,C,20,R,R,Green,Rising,,48,46,56,42,55,,,,,52,55,52,41,28,48,38,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nBlake Reed,Hitter,1B,3B,20,R,R,Green,Rising,,47,41,52,48,48,,,,,46,51,44,55,43,48,34,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nElias Massey,Hitter,SS,3B,19,R,R,Blue,Rising,,47,50,50,53,37,,,,,54,32,39,37,50,28,51,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nDaisuke Ikeda,Hitter,3B,SS,20,R,L,Green,Rising,,47,46,47,54,44,,,,,53,50,42,46,40,50,39,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nAaron Greene,Hitter,2B,SS,19,R,R,Blue,Rising,,47,53,47,46,46,,,,,41,54,44,37,30,51,49,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nPaul Sweeney,Hitter,LF,RF,20,S,R,Green,Rising,,47,38,44,57,43,,,,,53,54,44,51,59,51,44,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nEduardo Reyes,Hitter,CF,,18,R,L,Gold,Rising,,46,48,44,35,52,,,,,52,51,36,37,47,48,52,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nWeston Joyce,Hitter,3B,,19,R,R,Green,Rising,,46,40,49,54,55,,,,,40,47,41,51,54,33,39,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nStanley Thompson,Hitter,SS,3B,19,R,R,Blue,Rising,,46,51,42,52,44,,,,,44,48,45,35,36,48,51,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nBrendan Boyd,Hitter,1B,C,18,L,L,Blue,Rising,,45,49,43,48,40,,,,,50,32,36,52,43,51,48,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nAnderson Nunez,Hitter,CF,,18,R,L,Blue,Rising,,45,46,51,39,48,,,,,42,49,51,49,34,51,30,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nDerek Underwood,Hitter,LF,CF,18,R,R,Green,Rising,,44,53,38,37,52,,,,,43,44,36,52,48,49,45,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nBlake Valdez,Hitter,2B,SS,19,R,R,Green,Rising,,44,41,35,48,52,,,,,51,50,48,52,35,55,53,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nKai Ferrell,Hitter,3B,2B,19,R,R,Green,Rising,,44,42,40,41,44,,,,,52,45,52,36,54,45,45,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nDennis Burgos,Hitter,2B,3B,18,L,R,Green,Rising,,43,49,42,52,48,,,,,43,33,34,35,41,35,45,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nOctavio Santana,Hitter,2B,3B,18,R,R,Green,Rising,,43,49,44,38,44,,,,,51,51,36,47,23,46,28,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nTatsuya Watts,Hitter,2B,SS,18,R,R,Green,Rising,,43,37,36,52,38,,,,,46,51,51,49,51,49,45,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nDarius Choi,Hitter,C,1B,18,R,R,Green,Rising,,43,36,52,52,44,,,,,34,43,44,44,39,34,43,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nWilmer Phelps,Hitter,LF,,18,L,L,Green,Rising,,41,48,32,40,47,,,,,45,44,50,37,38,36,31,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nFernando Miranda,Hitter,LF,RF,18,R,R,Green,Rising,,40,38,38,47,37,,,,,51,47,47,35,32,33,30,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nNicholas Washington,Hitter,RF,,18,L,R,Green,Rising,,39,33,38,36,34,,,,,52,46,46,52,40,37,27,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nAlcides Velez,Pitcher,SP,,19,,L,Gold,Rising,,52,,,,,45,48,53,74,52,38,29,,41,,46,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nJack Gillespie,Pitcher,SP,,20,,R,Green,Rising,,50,,,,,44,50,40,78,52,59,36,,28,,30,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nElijah Cisneros,Pitcher,SP,,20,,R,Green,Rising,,50,,,,,50,47,52,58,43,57,56,,28,,33,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nTaylor Scott,Pitcher,SP,,20,,R,Green,Rising,,49,,,,,45,54,46,59,47,29,56,,41,,41,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nCraig Mejia,Pitcher,SP,,20,,R,Green,Rising,,49,,,,,38,49,58,59,39,33,46,,43,,45,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nGideon Velasquez,Pitcher,SP,,20,,R,Green,Rising,,49,,,,,38,49,58,59,39,33,46,,43,,45,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nMitchell Forbes,Pitcher,SP,,20,,R,Green,Rising,,49,,,,,35,47,50,77,30,26,57,,32,,50,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nColby Shannon,Pitcher,MR,,20,,R,Green,Rising,,48,,,,,60,55,38,36,53,47,40,,32,,36,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nDouglas Thomas,Pitcher,MR,,20,,R,Green,Rising,,48,,,,,48,52,58,31,49,48,40,,40,,38,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nJordan Wojcik,Pitcher,MR,,20,,R,Green,Rising,,48,,,,,55,49,51,39,53,38,41,,40,,43,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nCallum Todd,Pitcher,MR,,20,,R,Green,Rising,,48,,,,,49,59,39,41,55,42,30,,51,,59,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nElliot Lopez,Pitcher,SP,,18,,L,Blue,Rising,,47,,,,,29,47,50,71,29,48,42,,34,,26,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nKingston Elliott,Pitcher,SP,,20,,L,Green,Rising,,47,,,,,52,38,40,72,46,33,47,,39,,27,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nMalcolm Stewart,Pitcher,SP,,18,,R,Green,Rising,,45,,,,,39,38,45,71,36,42,47,,28,,42,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nClayton Blair,Pitcher,CL,,18,,R,Green,Rising,,43,,,,,68,39,37,30,43,47,50,,35,,28,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
-const SAMPLE_FILE = "newburgh-stovepipes-roster-2026-11-02.csv";
-const SAMPLE_AT = Date.parse("2026-11-03T02:40:00Z"); // when Claude read this roster from curveball.gg
+const SAMPLE_CSV = "Name,Type,Primary position,Secondary position,Age,Bats,Throws,Pack tier,Prime,Available at (UTC),Overall (OVR),Contact,Power,Plate discipline,Bunting,Velocity,Accuracy,Finesse,Endurance,Fielding range,Handling,Arm strength,Flexibility,Speed,Aggression,Awareness,Games (G),Plate appearances (PA),At-bats (AB),Runs (R),Hits (H),Doubles (2B),Triples (3B),Home runs (HR),Runs batted in (RBI),Walks (BB),Strikeouts (SO),Stolen bases (SB),Caught stealing (CS),Batting average (AVG),On-base pct (OBP),Slugging (SLG),OPS,AVG vs LHP,OBP vs LHP,SLG vs LHP,AVG vs RHP,OBP vs RHP,SLG vs RHP,Wins (W),Losses (L),Saves (SV),Blown saves (BS),Innings pitched (IP),Batters faced (BF),Hits allowed,Earned runs (ER),Walks allowed,Strikeouts,Home runs allowed,ERA,WHIP,K/9,BB/9,ERA vs LHB,WHIP vs LHB,ERA vs RHB,WHIP vs RHB\nOctavio Kondo,Hitter,1B,C,21,L,L,Gold,Rising,,53,63,57,54,43,,,,,40,49,57,51,40,38,43,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nHarley Collier,Hitter,LF,RF,21,L,L,Gold,Rising,,53,54,55,53,48,,,,,56,51,54,50,52,46,47,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nSebastian Ortega,Hitter,C,1B,21,R,R,Gold,Rising,,53,62,52,58,56,,,,,41,57,41,62,36,46,60,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nConnor Reyes,Hitter,1B,3B,21,S,R,Blue,Rising,,52,55,52,53,63,,,,,46,49,45,48,60,34,50,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nEfrain Slater,Hitter,CF,RF,21,R,L,Green,Rising,,51,61,59,43,62,,,,,41,51,42,40,38,40,51,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nBernardo Almonte,Hitter,3B,,21,R,R,Green,Rising,,51,58,48,47,52,,,,,52,51,48,54,59,38,39,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nLeon Holmes,Hitter,1B,C,21,R,R,Green,Rising,,51,49,59,45,58,,,,,54,58,55,43,31,50,40,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nLeon Castillo,Hitter,CF,,20,L,R,Blue,Rising,,50,57,49,40,52,,,,,48,55,46,42,45,51,57,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nArthur Olson,Hitter,CF,RF,21,R,L,Blue,Rising,,50,50,48,59,40,,,,,55,48,47,48,57,31,58,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nElias Massey,Hitter,SS,3B,20,R,R,Blue,Rising,,50,53,53,55,39,,,,,57,34,41,40,52,30,53,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nPaul Sweeney,Hitter,LF,RF,21,S,R,Green,Rising,,50,40,48,62,46,,,,,55,56,46,53,61,54,46,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nDaisuke Ikeda,Hitter,3B,SS,21,R,L,Green,Rising,,50,48,49,60,47,,,,,56,52,44,48,43,52,42,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nAaron Greene,Hitter,2B,SS,20,R,R,Blue,Rising,,50,58,49,48,49,,,,,43,57,47,39,32,53,51,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nBlake Reed,Hitter,1B,3B,21,R,R,Green,Rising,,49,44,56,50,50,,,,,49,53,47,57,46,51,36,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nEduardo Reyes,Hitter,CF,,19,R,L,Gold,Rising,,48,50,47,38,55,,,,,55,53,38,40,50,51,54,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nBlake Valdez,Hitter,2B,SS,20,R,R,Green,Rising,,47,44,38,51,54,,,,,53,52,50,54,37,58,55,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nKai Ferrell,Hitter,3B,2B,20,R,R,Green,Rising,,47,45,42,43,46,,,,,54,48,55,38,56,48,48,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nJack Gillespie,Pitcher,SP,,21,,R,Blue,Rising,,54,,,,,47,53,46,81,55,61,39,,31,,33,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nAlcides Velez,Pitcher,SP,,20,,L,Gold,Rising,,54,,,,,48,50,56,77,55,41,32,,44,,48,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nElijah Cisneros,Pitcher,SP,,21,,R,Blue,Rising,,54,,,,,53,54,55,61,45,59,59,,31,,36,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nTaylor Scott,Pitcher,SP,,21,,R,Green,Rising,,52,,,,,48,56,48,62,50,31,58,,43,,43,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nCraig Mejia,Pitcher,SP,,21,,R,Green,Rising,,52,,,,,40,52,60,62,42,35,48,,46,,48,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nJordan Wojcik,Pitcher,MR,,21,,R,Blue,Rising,,52,,,,,57,56,53,41,56,40,43,,42,,45,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nMitchell Forbes,Pitcher,SP,,21,,R,Green,Rising,,52,,,,,37,53,52,80,33,29,59,,34,,52,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nCallum Todd,Pitcher,MR,,21,,R,Blue,Rising,,52,,,,,52,62,46,44,58,45,33,,54,,62,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nColby Shannon,Pitcher,MR,,21,,R,Green,Rising,,51,,,,,62,57,44,38,56,50,42,,34,,38,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nKingston Elliott,Pitcher,SP,,21,,L,Green,Rising,,51,,,,,54,44,43,75,49,35,50,,41,,29,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nYoshi Leach,Pitcher,CL,,21,,L,Green,Rising,,51,,,,,61,58,60,24,37,45,34,,47,,46,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nDouglas Thomas,Pitcher,MR,,21,,R,Green,Rising,,50,,,,,50,57,60,33,52,50,43,,42,,40,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nLarry Bentley,Pitcher,MR,,21,,R,Green,Rising,,50,,,,,50,57,47,45,46,60,36,,49,,36,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\nElliot Lopez,Pitcher,SP,,19,,L,Blue,Rising,,49,,,,,32,50,52,73,32,50,44,,37,,29,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n";
+const SAMPLE_FILE = "newburgh-stovepipes-roster-2026-11-03.csv";
+const SAMPLE_AT = Date.parse("2026-11-04T01:25:00Z"); // when Claude read this roster from curveball.gg
 const ROSTER_MAX = 40, PITCHER_MAX = 15;
 // Players shown as locked (or in the starting lineup) on curveball.gg when Claude read the roster.
-const SAMPLE_LOCKED = ["Leon Castillo","Leon Holmes","Blake Reed","Elias Massey","Daisuke Ikeda","Eduardo Reyes","Sebastian Ortega","Efrain Slater","Octavio Kondo","Aaron Greene","Paul Sweeney","Stanley Thompson","Dennis Burgos","Alcides Velez","Jack Gillespie","Elijah Cisneros","Craig Mejia","Colby Shannon","Douglas Thomas","Jordan Wojcik","Elliot Lopez","Malcolm Stewart","Clayton Blair"];
+const SAMPLE_LOCKED = [];
 
 // ---------------------------------------------------------------- settings
 const state = {
@@ -313,6 +360,12 @@ function parseCSV(text) {
 }
 
 function loadRoster(text, fileName) {
+  state.basePlayers = parseRosterText(text);
+  state.file = fileName;
+  state.team = teamFromFile(fileName);
+  applyChanges();
+}
+function parseRosterText(text) {
   const rows = parseCSV(text.replace(/^﻿/, ""));
   if (!rows.length) throw new Error("That file is empty.");
   const head = rows[0].map(h => h.trim());
@@ -349,57 +402,122 @@ function loadRoster(text, fileName) {
     players.push(base);
   });
   if (!players.length) throw new Error("No hitters or pitchers found in that file.");
-  state.basePlayers = players;
-  state.file = fileName;
-  state.team = teamFromFile(fileName);
-  applyChanges();
+  return players;
 }
 
 // ---------------------------------------------------------------- moves made since the export
 // The page can't read curveball.gg directly, so signings and releases you make in the game are
 // recorded here and layered on top of the last export. A fresh export replaces them.
 state.changes = { file: "", added: [], released: [] };
-function applyChanges() {
-  const c = state.changes;
+// Farm club: players who aren't needed here can be transferred instead of released.
+state.farm = { name: "Sprinklesburg Smiths", open: 15, openP: 5 };
+try { const f = JSON.parse(localStorage.getItem("csgg-farm") || "null"); if (f) state.farm = { ...state.farm, ...f }; } catch (_) {}
+function saveFarm() { try { localStorage.setItem("csgg-farm", JSON.stringify(state.farm)); } catch (_) {} }
+const farmShort = () => (state.farm.name || "farm club").trim().split(/\s+/).slice(-1)[0];
+// ---------------------------------------------------------------- two clubs
+// "main" is the Stovepipes, "farm" the second club. Every tab shows the club picked in the switcher;
+// the other club's data waits in state.clubs.
+state.club = "main";
+state.clubs = { main: null, farm: null };
+state.callups = new Map();
+const LSKEY = { roster: k => k === "main" ? "csgg-roster" : "csgg-roster-farm", changes: k => k === "main" ? "csgg-changes" : "csgg-changes-farm" };
+const freshChanges = file => ({ file, added: [], released: [], log: [] });
+const otherClub = () => state.club === "main" ? "farm" : "main";
+function clubName(k) {
+  const c = state.clubs[k];
+  if (k === state.club && state.file) return state.team;
+  if (c && c.file) return c.team;
+  return k === "main" ? "Newburgh Stovepipes" : state.farm.name;
+}
+const clubShort = k => clubName(k).trim().split(/\s+/).slice(-1)[0];
+function buildPlayers(base, c) {
   const gone = new Set(c.released);
-  const base = state.basePlayers.filter(p => !gone.has(p.type + "|" + p.name));
-  const added = c.added.map((a, i) => { const p = makePlayer(a.f, a.type, 1000 + i); p.isFA = false; p.signed = true; return p; });
-  state.players = [...base, ...added];
+  const kept = (base || []).filter(p => !gone.has(p.type + "|" + p.name));
+  const added = c.added.map((a, i) => {
+    const p = a.player ? JSON.parse(JSON.stringify(a.player)) : makePlayer(a.f, a.type, 0);
+    p.id = 1000 + i; p.isFA = false; p.signed = true; return p;
+  });
+  return [...kept, ...added];
+}
+function stash() { state.clubs[state.club] = { base: state.basePlayers, file: state.file, team: state.team, changes: state.changes }; }
+function unstash(k) {
+  state.club = k;
+  const c = state.clubs[k] || { base: null, file: "", team: "", changes: freshChanges("") };
+  state.basePlayers = c.base || []; state.file = c.file || ""; state.team = c.file ? c.team : clubName(k); state.changes = c.changes;
+  applyChanges();
+}
+function getClubPlayers(k) {
+  if (k === state.club) return state.players;
+  const c = state.clubs[k];
+  return c ? buildPlayers(c.base, c.changes) : [];
+}
+function farmOpen() {
+  if (state.club !== "main") return { players: 0, pitchers: 0 };
+  const fc = state.clubs.farm;
+  if (fc && fc.base) {
+    const fp = getClubPlayers("farm");
+    const pl = Math.max(0, ROSTER_MAX - fp.length), pi = Math.max(0, PITCHER_MAX - fp.filter(p => p.type === "Pitcher").length);
+    return { players: pl, pitchers: Math.min(pl, pi), fromRoster: true };
+  }
+  const moved = (state.changes.log || []).filter(x => x.kind === "transfer");
+  return { players: Math.max(0, (Number(state.farm.open) || 0) - moved.length), pitchers: Math.max(0, (Number(state.farm.openP) || 0) - moved.filter(x => x.type === "Pitcher").length) };
+}
+function applyChanges() {
+  state.players = buildPlayers(state.basePlayers, state.changes);
   state.hitters = state.players.filter(p => p.type === "Hitter");
   state.pitchers = state.players.filter(p => p.type === "Pitcher");
-  computeAll();
+  if (state.players.length) computeAll();
 }
-function saveChanges() { try { localStorage.setItem("csgg-changes", JSON.stringify(state.changes)); } catch (_) {} }
-function resetChanges(file) { state.changes = { file, added: [], released: [] }; saveChanges(); }
+function saveChangesFor(k, ch) { try { localStorage.setItem(LSKEY.changes(k), JSON.stringify(ch)); } catch (_) {} }
+function saveChanges() { saveChangesFor(state.club, state.changes); }
+function resetChanges(file) { state.changes = freshChanges(file); saveChanges(); }
+// Moving a player to the other club: off this roster, onto that one.
+function sendToOther(p) {
+  const k = otherClub();
+  const c = state.clubs[k] || (state.clubs[k] = { base: null, file: "", team: "", changes: freshChanges("") });
+  const raw = JSON.parse(JSON.stringify(p));
+  ["keep", "why", "cutRank", "move", "role", "locked", "callup", "signed", "isFA"].forEach(f => delete raw[f]);
+  c.changes.added.push({ player: raw, type: p.type });
+  (c.changes.log = c.changes.log || []).push({ kind: "receive", name: p.name, type: p.type, from: clubShort(state.club) });
+  saveChangesFor(k, c.changes);
+}
+function unsendToOther(name) {
+  const c = state.clubs[otherClub()]; if (!c) return;
+  for (let i = c.changes.added.length - 1; i >= 0; i--) if (c.changes.added[i].player && c.changes.added[i].player.name === name) { c.changes.added.splice(i, 1); break; }
+  const li = (c.changes.log || []).map(x => x.kind === "receive" && x.name === name).lastIndexOf(true);
+  if (li >= 0) c.changes.log.splice(li, 1);
+  saveChangesFor(otherClub(), c.changes);
+}
 function recordSign(f, type) { state.changes.added.push({ f: { ...f }, type, at: Date.now() }); state.changes.log = state.changes.log || []; state.changes.log.push({ kind: "sign", name: f.name || "Free agent", type }); }
-function recordRelease(p) {
+function recordRelease(p, kind = "release") {
   state.changes.log = state.changes.log || [];
   if (p.signed) {
     const i = p.id - 1000;
     const [entry] = state.changes.added.splice(i, 1);
-    state.changes.log.push({ kind: "release", name: p.name, type: p.type, restore: entry });
+    state.changes.log.push({ kind, name: p.name, type: p.type, restore: entry });
   } else {
     state.changes.released.push(p.type + "|" + p.name);
-    state.changes.log.push({ kind: "release", name: p.name, type: p.type, key: p.type + "|" + p.name });
+    state.changes.log.push({ kind, name: p.name, type: p.type, key: p.type + "|" + p.name });
   }
 }
 function undoLast() {
   const c = state.changes, last = (c.log || []).pop(); if (!last) return;
-  if (last.kind === "sign") { for (let i = c.added.length - 1; i >= 0; i--) if ((c.added[i].f.name || "Free agent") === last.name && c.added[i].type === last.type) { c.added.splice(i, 1); break; } }
+  if (last.kind === "transfer") unsendToOther(last.name);
+  if (last.kind === "sign" || last.kind === "receive") { for (let i = c.added.length - 1; i >= 0; i--) { const a = c.added[i]; const nm = a.player ? a.player.name : (a.f.name || "Free agent"); if (nm === last.name && a.type === last.type) { c.added.splice(i, 1); break; } } return; }
   else if (last.restore) c.added.push(last.restore);
   else { const i = c.released.lastIndexOf(last.key); if (i >= 0) c.released.splice(i, 1); }
 }
 function changesBanner() {
   const log = state.changes.log || [];
   if (!log.length) return "";
-  return `<div class="notice info changes"><div><b>Moves since your export:</b> ${log.map(x => `<span class="pill ${x.kind === "sign" ? "keep" : "cut"}">${x.kind === "sign" ? "Signed" : "Released"} ${esc(x.name)}</span>`).join(" ")}</div>
+  return `<div class="notice info changes"><div><b>Moves since your export:</b> ${log.map(x => `<span class="pill ${x.kind === "sign" || x.kind === "receive" ? "keep" : x.kind === "transfer" ? "farm" : "cut"}">${x.kind === "sign" ? "Signed" : x.kind === "receive" ? "From " + esc(x.from || "other club") + ":" : x.kind === "transfer" ? "Sent to " + esc(clubShort(otherClub())) + ":" : "Released"} ${esc(x.name)}</span>`).join(" ")}</div>
     <div class="controls"><button class="btn" type="button" data-action="undo">Undo last</button><button class="btn" type="button" data-action="clear-changes">Clear all</button>
     <span class="small muted">Uploading a fresh export replaces these.</span></div></div>`;
 }
 
 function teamFromFile(f) {
   const m = f.replace(/\.csv$/i, "").replace(/-roster.*$/i, "");
-  if (!m || m === f.replace(/\.csv$/i, "")) return "Scouting Desk";
+  if (!m || m === f.replace(/\.csv$/i, "")) return state.club === "farm" ? state.farm.name : "Scouting Desk";
   return m.split(/[-_ ]+/).map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
 }
 
@@ -572,19 +690,75 @@ function computeStatus() {
     else if (Number(s.label) <= KEEP_PEN) { p.keep = true; p.why = `Bullpen arm #${s.label}`; }
     else { p.keep = false; p.why = "Back of the bullpen: rarely pitches"; }
   });
-  const locked = new Set(state.file === SAMPLE_FILE ? SAMPLE_LOCKED : []);
+  const locked = new Set(state.club === "main" && state.file === SAMPLE_FILE ? SAMPLE_LOCKED : []);
   state.players.forEach(p => { p.locked = locked.has(p.name); if (p.locked && !p.keep) { p.keep = true; p.why = "Locked in the game, so he can't be released"; } });
-  const cands = state.players.filter(p => !p.keep).sort((a, b) => a.value - b.value);
-  cands.forEach((p, i) => {
+  // Players who aren't needed here: the ones with the most upside go to the farm club (as many as it
+  // has room for) so they get playing time; the rest are release candidates.
+  const cands = state.players.filter(p => !p.keep);
+  state.players.forEach(p => { p.move = null; p.upside = upsideScore(p); p.callup = state.club === "farm" ? state.callups.get(p.name) || null : null; });
+  if (state.club === "farm") {
+    // On the farm club, extras just sit on the bench unless the roster is full.
+    const full = state.players.length >= ROSTER_MAX;
+    cands.sort((a, b) => a.value - b.value).forEach((p, i) => { p.cutRank = i + 1; p.move = full ? "release" : "bench"; p.why += full ? ". The roster is full, so he's first to go if you need a spot" : ". Fine to keep as depth while there's room"; });
+    return;
+  }
+  let { players: open, pitchers: openP } = farmOpen();
+  [...cands].sort((a, b) => b.upside - a.upside).forEach(p => {
+    if (open > 0 && (p.type !== "Pitcher" || openP > 0)) { p.move = "transfer"; open--; if (p.type === "Pitcher") openP--; }
+    else p.move = "release";
+  });
+  const order = [...cands.filter(p => p.move === "release").sort((a, b) => a.value - b.value),
+                 ...cands.filter(p => p.move === "transfer").sort((a, b) => a.upside - b.upside)];
+  order.forEach((p, i) => {
     p.cutRank = i + 1;
+    p.why += p.move === "transfer"
+      ? `. He won't play here, so send him to the ${clubName("farm")} for ${p.type === "Pitcher" ? "innings" : "at-bats"} instead of releasing him`
+      : `. Not enough room on the ${clubName("farm")} for him, and he has the least upside of the extras, so release him when you need a spot`;
     if (teamGames >= 10 && !p.g) p.why += `; 0 games so far`;
   });
 }
-const RELEASE_FLAG = 4; // how many of the release order get the red flag
+// Call-ups: for each farm player, add him to the Stovepipes as a test and see whether he'd earn a real role.
+let callupKey = "", callupBusy = false;
+function scheduleCallups() {
+  if (state.club !== "farm" || !state.players.length) return;
+  const mc = state.clubs.main; if (!mc || !mc.base) { state.callups = new Map(); return; }
+  const key = JSON.stringify([mc.file, (mc.changes.log || []).length, state.file, (state.changes.log || []).length, state.players.length]);
+  if (key === callupKey || callupBusy) return;
+  callupBusy = true;
+  setTimeout(() => {
+    const result = new Map();
+    const save = { players: state.players, hitters: state.hitters, pitchers: state.pitchers, file: state.file, club: state.club, callups: state.callups };
+    try {
+      const mainPlayers = buildPlayers(mc.base, mc.changes);
+      state.club = "main"; state.file = mc.file; state.callups = new Map();
+      for (const fp of save.players) {
+        const test = JSON.parse(JSON.stringify(fp)); test.id = -1;
+        state.players = [...mainPlayers, test];
+        state.hitters = state.players.filter(p => p.type === "Hitter");
+        state.pitchers = state.players.filter(p => p.type === "Pitcher");
+        computeAll();
+        if (test.keep && /^(Starts|In the rotation|Closer|Bullpen arm|Late-inning)/.test(test.why))
+          result.set(fp.name, `Would earn a role on the ${clubName("main")}: ${test.why.toLowerCase()}.`);
+      }
+    } catch (_) {}
+    state.players = save.players; state.hitters = save.hitters; state.pitchers = save.pitchers; state.file = save.file; state.club = save.club;
+    state.callups = result; callupKey = key; callupBusy = false;
+    computeAll(); render();
+  }, 30);
+}
+
+// Upside: current Value plus youth, pack tier and a standout rating. Used only to decide transfer vs release.
+function upsideScore(p) {
+  const peak = p.type === "Hitter" ? Math.max(p.contact, p.power, p.eye, p.speed, p.range, p.arm) : Math.max(p.velo, p.acc, p.fin);
+  return p.value + 1.5 * Math.max(0, 22 - (p.age ?? 20)) + ({ Gold: 3, Blue: 1.5 }[p.tier] || 0) + (peak >= 55 ? 1.5 : 0);
+}
+const RELEASE_FLAG = 4;
 function statusHTML(p) {
+  if (p.callup) return `<span class="pill callup" title="${esc(p.callup)}">Call up</span>`;
+  if (p.move === "bench") return `<span class="pill depth" title="${esc(p.why)}">Bench</span>`;
   if (p.keep) return `<span class="pill keep" title="${esc(p.why)}">Keep${p.locked ? " 🔒" : ""}</span>`;
-  if (p.cutRank <= RELEASE_FLAG) return `<span class="pill cut" title="${esc(p.why)}">Release #${p.cutRank}</span>`;
-  return `<span class="pill depth" title="${esc(p.why)}">Depth · #${p.cutRank}</span>`;
+  if (p.move === "transfer") return `<span class="pill farm" title="${esc(p.why)}">Send to ${esc(clubShort("farm"))}</span>`;
+  return `<span class="pill cut" title="${esc(p.why)}">Release</span>`;
 }
 
 // ---------------------------------------------------------------- tags & summaries
@@ -681,7 +855,7 @@ function viewRoster() {
   let rows = state.players.filter(p => state.filter === "all" || (state.filter === "h" ? p.type === "Hitter" : p.type === "Pitcher"));
   if (state.search) rows = rows.filter(p => p.name.toLowerCase().includes(state.search.toLowerCase()));
   const key = state.sort.key, dir = state.sort.dir;
-  const val = p => key === "name" ? p.name : key === "pos" ? posText(p) : key === "ovr" ? p.ovr : key === "value" ? p.value : key === "tier" ? ({ Gold: 3, Blue: 2, Green: 1 }[p.tier] || 0) : key === "cut" ? (p.keep ? 999 : p.cutRank) : (p[key] ?? -1);
+  const val = p => key === "name" ? p.name : key === "pos" ? posText(p) : key === "ovr" ? p.ovr : key === "value" ? p.value : key === "tier" ? ({ Gold: 3, Blue: 2, Green: 1 }[p.tier] || 0) : key === "cut" ? (p.callup ? -1 : p.keep ? 999 : p.cutRank) : (p[key] ?? -1);
   rows.sort((a, b) => { const x = val(a), y = val(b); return (typeof x === "string" ? x.localeCompare(y) : x - y) * dir; });
   const rankMap = new Map([...state.players].sort((a, b) => b.value - a.value).map((p, i) => [p.id, i + 1]));
   const th = (k, label, cls = "") => `<th class="sortable ${cls}" data-sort="${k}" aria-sort="${state.sort.key === k ? (dir < 0 ? "descending" : "ascending") : "none"}">${label}</th>`;
@@ -693,11 +867,21 @@ function viewRoster() {
     ${ace ? `<button class="tile" ${playerLink(ace)}><span class="k">Ace</span><span class="v">${esc(ace.name)} ${gr(ace.sp)}</span><span class="d">${hand(ace)}${restInfo(ace) ? " · " + restInfo(ace).text : ""}</span></button>` : ""}
     ${bestGlove ? `<button class="tile" ${playerLink(bestGlove)}><span class="k">Best glove</span><span class="v">${esc(bestGlove.name)} ${gr(bestGlove.glove)}</span><span class="d">at ${bestGlove.bestPos}</span></button>` : ""}
     ${fastest ? `<button class="tile" ${playerLink(fastest)}><span class="k">Best baserunner</span><span class="v">${esc(fastest.name)} ${gr(fastest.run)}</span><span class="d">Speed ${fastest.speed} · Awareness ${fastest.aware}</span></button>` : ""}
-    <button class="tile" data-sort-cut="1"><span class="k">Release candidates</span><span class="v">${state.players.filter(p => !p.keep && p.cutRank <= RELEASE_FLAG).map(p => esc(p.name.split(" ").slice(-1)[0])).join(", ") || "None"}</span><span class="d">Click to sort by release order</span></button>
+    ${state.club === "main" ? `<button class="tile" data-sort-cut="1"><span class="k">Send to ${esc(clubShort("farm"))}</span><span class="v" style="font-size:14px">${state.players.filter(p => p.move === "transfer").map(p => esc(p.name.split(" ").slice(-1)[0])).join(", ") || "Nobody"}</span><span class="d">${(() => { const r = state.players.filter(p => p.move === "release"); return r.length ? "Release if you need room: " + r.map(p => esc(p.name.split(" ").slice(-1)[0])).join(", ") : "Nobody needs releasing"; })()}</span></button>` : ""}
     ${P.some(p => p.availableAt) ? `<div class="tile" style="cursor:default"><span class="k">Arms ready now</span><span class="v num">${ready} of ${P.length}</span><span class="d">From the rest times in this export</span></div>` : ""}
   </div>
+  ${state.club === "main" ? (farmOpen().fromRoster
+    ? `<div class="farm-card"><span class="subhead" style="margin:0;align-self:center">Farm club</span><span class="small">The <b>${esc(clubName("farm"))}</b> have <b>${farmOpen().players}</b> open roster spot${farmOpen().players === 1 ? "" : "s"} and <b>${farmOpen().pitchers}</b> open pitcher spot${farmOpen().pitchers === 1 ? "" : "s"}, from their uploaded roster plus the moves you've recorded.</span></div>`
+    : `<div class="farm-card" id="farmCard">
+    <span class="subhead" style="margin:0;align-self:center">Farm club</span>
+    <label class="field" for="farm-name">Name<input type="text" id="farm-name" data-farm="name" value="${esc(state.farm.name)}"></label>
+    <label class="field" for="farm-open">Open roster spots<input type="number" id="farm-open" data-farm="open" min="0" max="40" value="${esc(state.farm.open)}"></label>
+    <label class="field" for="farm-openp">Open pitcher spots<input type="number" id="farm-openp" data-farm="openP" min="0" max="15" value="${esc(state.farm.openP)}"></label>
+    <span class="small muted" style="max-width:44ch">Upload the ${esc(state.farm.name)}' roster with the club switcher above and these fill in automatically. For now: ${farmOpen().players} player and ${farmOpen().pitchers} pitcher spots left after recorded transfers.</span>
+  </div>`)
+    : `<div class="farm-card"><span class="subhead" style="margin:0;align-self:center">Call-ups</span><span class="small">${!(state.clubs.main && state.clubs.main.base) ? "Load the Stovepipes' roster to check who's ready for a call-up." : callupBusy ? "Checking which players would earn a role on the Stovepipes…" : state.callups.size ? `<b>${state.callups.size}</b> player${state.callups.size === 1 ? " is" : "s are"} ready to help the ${esc(clubName("main"))}: ${[...state.callups.keys()].map(esc).join(", ")}. Each one's card says what role he'd fill.` : `Nobody here would earn a role on the ${esc(clubName("main"))} yet.`}</span></div>`}
   <div class="section-head">
-    <div><h2>Player rankings</h2><p class="lede" style="margin:0">Ranked by Value: hitting plus defense at each player's best spot, or for pitchers, how good they are in their best role. <b>Roster spot</b> shows who's needed: <span class="pill keep">Keep</span> players start, sub, back up a position or pitch regularly. Everyone else is <span class="pill depth">Depth</span>, numbered in release order, and the first ${RELEASE_FLAG} are flagged <span class="pill cut">Release</span>. Hover a pill for the reason. Click a player for his scouting report.</p></div>
+    <div><h2>Player rankings</h2><p class="lede" style="margin:0">Ranked by Value: hitting plus defense at each player's best spot, or for pitchers, how good they are in their best role. <b>Roster spot</b> shows what to do with each player: <span class="pill keep">Keep</span> players start, sub, back up a position or pitch regularly. ${state.club === "main" ? `Players who wouldn't play here are marked <span class="pill farm">Send to ${esc(clubShort("farm"))}</span> while the farm club has room (most upside first), or <span class="pill cut">Release</span> when it's full.` : `<span class="pill callup">Call up</span> marks players who'd earn a role on the ${esc(clubName("main"))}. <span class="pill depth">Bench</span> players are depth here.`} Hover a pill for the reason. Click a player for his scouting report.</p></div>
     <div class="controls">
       <div class="seg" role="group" aria-label="Show">
         <button type="button" data-filter="h" aria-pressed="${state.filter === "h"}">Hitters</button>
@@ -904,7 +1088,7 @@ function analyzeFA() {
     const others = state.players.filter(p => p.id !== -1 && !p.keep).sort((a, b) => a.cutRank - b.cutRank);
     let d = others.find(p => p.type === fa.type) || (fa.type === "Pitcher" ? null : others[0]);
     if (!d && fa.type === "Pitcher") d = state.pitchers.filter(p => p.id !== -1 && !p.locked).sort((a, b) => a.value - b.value)[0];
-    if (d) res.drop = { p: d, why: d.why };
+    if (d) res.drop = { p: d, why: d.why, move: d.move || "release" };
     res.faKeep = fa.keep; res.faWhy = fa.why; res.faCut = fa.cutRank;
     if (fa.type === "Hitter") {
       const pos = fa.pos1, list = state.hitters.filter(h => canPlay(h, pos)).sort((a, b) => (.75 * bat(b) + .25 * glove(b, pos)) - (.75 * bat(a) + .25 * glove(a, pos)));
@@ -953,7 +1137,7 @@ function verdictFor(r) {
 function compareRows(r) {
   const fa = r.fa, cols = [["Free agent", fa]];
   if (r.incumbent && r.incumbent.id !== r.drop?.p.id) cols.push([fa.type === "Hitter" ? `Your ${fa.pos1}` : "He'd bump", r.incumbent]);
-  if (r.drop) cols.push(["Release pick", r.drop.p]);
+  if (r.drop) cols.push([r.drop.move === "transfer" ? "Leaving (to farm)" : "Leaving (release)", r.drop.p]);
   const rows = fa.type === "Hitter"
     ? [["Value", p => barHTML(p.value)], ["Bat", p => gr(p.bat)], ["On-base", p => gr(p.ob)], ["Power", p => gr(p.pw)], ["Run", p => gr(p.run)],
        [`Glove at ${fa.pos1}`, p => canPlay(p, fa.pos1) ? gr(glove(p, fa.pos1)) : '<span class="muted small">Can\'t play it</span>'], ["Positions", p => posText(p)], ["Bats", p => p.bats || "–"], ["Age · Pack", p => `${p.age ?? "?"} · ${esc(p.tier || "?")}`]]
@@ -974,24 +1158,27 @@ function renderFAResult() {
   const r = analyzeFA(), v = verdictFor(r);
   const count = state.players.length, limit = state.rosterLimit ?? ROSTER_MAX, open = limit - count;
   const pitchersFull = r.fa.type === "Pitcher" && state.pitchers.length >= PITCHER_MAX;
+  const isT = r.drop && r.drop.move === "transfer";
+  const verb = isT ? `send <b>${esc(r.drop.p.name)}</b> (${posText(r.drop.p)}) to the ${esc(clubName("farm"))}` : `release <b>${esc(r.drop?.p.name)}</b> (${posText(r.drop?.p || {})})`;
   const dropLine = r.drop
-    ? (open > 0
-      ? `You have ${open} open spot${open === 1 ? "" : "s"}, so no release is needed. If you need a spot later, the first to go would be <b>${esc(r.drop.p.name)}</b> (${posText(r.drop.p)}).`
-      : `Your roster is full (${count} of ${limit}). ${v.kind === "pass" ? "If you sign him anyway, release" : "To sign him, release"} <b>${esc(r.drop.p.name)}</b> (${posText(r.drop.p)}). ${esc(r.drop.why)}.`)
-    : "Everyone on your roster has a role, so there's no obvious player to release.";
-  const pitcherNote = pitchersFull ? ` <b>You're at the ${PITCHER_MAX}-pitcher limit, so the release has to be a pitcher.</b>` : "";
+    ? (open > 0 && !pitchersFull
+      ? `You have ${open} open spot${open === 1 ? "" : "s"}, so nobody has to leave. If you need a spot later, ${verb}.`
+      : `Your roster is full (${count} of ${limit}). ${v.kind === "pass" ? "If you sign him anyway," : "To make room,"} ${verb}. ${esc(r.drop.why)}.`)
+    : "Everyone on your roster has a role, so there's no obvious player to move.";
+  const pitcherNote = pitchersFull ? ` <b>You're at the ${PITCHER_MAX}-pitcher limit, so the player leaving has to be a pitcher.</b>` : "";
   const fa = r.fa;
   const tags = tagsFor(fa);
   box.innerHTML = `${faFlash ? `<div class="notice info">${faFlash}</div>` : ""}
     <div class="verdict ${v.kind}"><span class="big">${v.word}</span><span>${v.line}</span></div>
     <ul class="points">${v.pts.map(x => `<li>${x}</li>`).join("")}</ul>
     ${tags.length ? tagHTML(tags) : ""}
-    <div class="card" style="gap:6px"><h3>Who to release</h3><p style="margin:0">${dropLine}${pitcherNote}</p><p class="small muted" style="margin:0">The game won't let you drop a locked player. If ${r.drop ? esc(r.drop.p.name) : "he"} shows a lock on your Roster page, pick the next player in release order on the Rankings tab.</p></div>
+    <div class="card" style="gap:6px"><h3>${isT ? "Who to move" : "Who to release"}</h3><p style="margin:0">${dropLine}${pitcherNote}</p><p class="small muted" style="margin:0">The game won't let you drop a locked player. If ${r.drop ? esc(r.drop.p.name) : "he"} shows a lock on your Roster page, sort Rankings by Roster spot and take the next one.</p></div>
+    <button class="btn needs-claude" type="button" id="askFA" style="justify-self:start">Ask Claude about this signing</button>
     <div class="card" style="gap:8px"><h3>What did you do?</h3>
       <p class="small muted" style="margin:0">Record it here so the next card is checked against your real roster.</p>
       <div class="controls">
-        ${r.drop && (open <= 0 || pitchersFull) ? `<button class="btn primary-green" type="button" data-action="sign-drop" data-drop="${r.drop.p.id}">Signed him, released ${esc(r.drop.p.name)}</button>` : ""}
-        <button class="btn" type="button" data-action="sign">${r.drop && (open <= 0 || pitchersFull) ? "Signed him, released someone else" : "Signed him"}</button>
+        ${r.drop && (open <= 0 || pitchersFull) ? `<button class="btn primary-green" type="button" data-action="sign-drop" data-kind="${isT ? "transfer" : "release"}" data-drop="${r.drop.p.id}">Signed him, ${isT ? "sent" : "released"} ${esc(r.drop.p.name)}${isT ? " to the " + esc(clubShort("farm")) : ""}</button>` : ""}
+        <button class="btn" type="button" data-action="sign">${r.drop && (open <= 0 || pitchersFull) ? "Signed him, moved someone else" : "Signed him"}</button>
         <button class="btn" type="button" data-action="skip">Passed, next card</button>
       </div>
     </div>
@@ -1003,7 +1190,21 @@ function viewFreeAgent() {
   const posOpts = (isH ? FIELD : ["SP", "MR", "CL"]);
   const opt = (list, cur, blank) => (blank ? `<option value="">None</option>` : "") + list.map(x => `<option value="${x}" ${x === cur ? "selected" : ""}>${x}</option>`).join("");
   const num = (k, label) => `<label class="field" for="fa-${k}">${label}<input type="number" id="fa-${k}" data-field="${k}" min="0" max="100" inputmode="numeric" value="${esc(f[k])}"></label>`;
-  return `<div class="section-head"><div><h2>Free agent check</h2>
+  const cr = state.cardRead;
+  const reader = `<section class="reader needs-images ${cr.status === "reading" ? "busy" : ""}" aria-live="polite">
+    <div class="row">
+      <div style="flex:1;min-width:240px"><h3>Read a card screenshot</h3>
+        <p class="small muted" style="margin:4px 0 0">Paste a screenshot (Ctrl+V or ⌘V) anywhere on this page, drop it here, or choose a file. Claude reads the ratings and fills in the form. A screenshot of a whole pack checks every card at once.</p></div>
+      <input type="file" id="cardFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+      <button class="btn primary-green" type="button" id="cardPick" ${cr.status === "reading" ? "disabled" : ""}>Choose screenshot</button>
+    </div>
+    ${cr.thumb ? `<div class="row"><img src="${cr.thumb}" alt="Your screenshot"><span class="small">${cr.status === "reading" ? "Reading the card… this usually takes 10 to 30 seconds." : esc(cr.msg || "")}</span></div>` : ""}
+    ${cr.status === "error" ? `<p class="small" style="margin:0;color:var(--g-d)">${esc(cr.msg)}</p>` : ""}
+    ${cr.summary && cr.summary.length > 1 ? `<div class="table-wrap"><table class="pack"><thead><tr><th>Card</th><th>Verdict</th><th>Why</th><th>To make room</th><th></th></tr></thead><tbody>
+      ${cr.summary.map((s, i) => `<tr><td><b>${esc(s.name)}</b><br><span class="pos">${esc(s.pos)}</span></td><td><span class="pill ${s.kind === "sign" ? "keep" : s.kind === "maybe" ? "depth" : "cut"}">${esc(s.word)}</span></td><td class="small">${s.line}${s.assumed ? `<br><span class="muted">${esc(s.assumed)}</span>` : ""}</td><td class="small">${s.drop ? esc(s.drop) : "–"}</td><td><button class="btn" type="button" data-loadcard="${i}">Open</button></td></tr>`).join("")}
+    </tbody></table></div><p class="small muted" style="margin:0">Each card is checked against your roster on its own. If you keep more than one, record the first, then open the next so it's checked against the updated roster.</p>` : ""}
+  </section>`;
+  return `${reader}<div class="section-head"><div><h2>Free agent check</h2>
     <p class="lede" style="margin:0">Type in a free agent's ratings from the Free Agents list, the Speakeasy or Roulette. The page adds him to your roster, rebuilds your lineups and pitching staff, and tells you whether he'd play and who to release to make room.</p></div></div>
   <div class="fa-layout">
     <form class="card" id="faForm" onsubmit="return false">
@@ -1059,6 +1260,7 @@ function openPlayer(id) {
       <div class="small" style="margin-top:6px">${statusHTML(p)} <span class="muted">${esc(p.why)}</span></div>
     </div>
     <p class="summary">${esc(summary(p))}</p>
+    <button class="btn needs-claude" type="button" data-ask="${p.id}" style="justify-self:start">Ask Claude about ${esc(p.name.split(" ")[0])}</button>
     ${tagHTML(tagsFor(p))}
     <div class="tags">${blends.map(([k, v]) => `<span class="tag">${k} ${gr(v)}</span>`).join(" ")}</div>
     ${posGrades ? `<div><p class="subhead">Glove by position</p><div class="tags">${posGrades}</div></div>` : ""}
@@ -1067,8 +1269,8 @@ function openPlayer(id) {
       return `<div class="rating"><span>${k}</span><span class="track"><span class="fill ${gClass(g)}" style="display:block;width:${Math.min(100, v)}%"></span></span><span class="num small">${v}</span><span class="gr ${gClass(g)}">${g}</span></div>`;
     }).join("")}</div></div>
     ${stats}
-    <div class="card" style="gap:6px"><p class="small muted" style="margin:0">Released or shoeboxed him in the game? Record it so the page stops counting him.</p>
-      <button class="btn danger" type="button" data-action="release" data-pid="${p.id}" style="justify-self:start">I released him</button></div>`;
+    <div class="card" style="gap:6px"><p class="small muted" style="margin:0">Moved him off the ${esc(clubName(state.club))} in the game? Record it so the page stays in sync.</p>
+      <div class="controls"><button class="btn" type="button" data-action="transfer" data-pid="${p.id}">${state.club === "main" ? "I sent him to the " + esc(clubShort("farm")) : "I called him up to the " + esc(clubShort("main"))}</button><button class="btn danger" type="button" data-action="release" data-pid="${p.id}">I released him</button></div></div>`;
   d.classList.add("open"); d.setAttribute("aria-hidden", "false");
   document.getElementById("overlay").classList.add("open");
   document.getElementById("closeDrawer").focus();
@@ -1087,32 +1289,227 @@ function handleAction(el) {
     let msg = `Recorded: signed <b>${esc(name)}</b>`;
     if (a === "sign-drop") {
       const p = state.players.find(x => x.id === Number(el.dataset.drop));
-      if (p) { recordRelease(p); msg += `, released <b>${esc(p.name)}</b>`; }
-    } else msg += `. If you released someone, open his card in Rankings and press "I released him".`;
+      const kind = el.dataset.kind || "release";
+      if (p) { if (kind === "transfer") sendToOther(p); recordRelease(p, kind); msg += kind === "transfer" ? `, sent <b>${esc(p.name)}</b> to the ${esc(clubName("farm"))}` : `, released <b>${esc(p.name)}</b>`; }
+    } else msg += `. If you moved someone off the roster, open his card in Rankings and record it there.`;
     finishMove(msg + ". Ready for the next card.");
     blankFA(type); render(); return;
   }
   if (a === "skip") { faFlash = `Passed on <b>${esc(name)}</b>. Ready for the next card.`; blankFA(type); render(); return; }
-  if (a === "release") {
+  if (a === "release" || a === "transfer") {
     const p = state.players.find(x => x.id === Number(el.dataset.pid)); if (!p) return;
-    recordRelease(p); closeDrawer(); finishMove(`Recorded: released <b>${esc(p.name)}</b>.`); render(); return;
+    if (a === "transfer") sendToOther(p);
+    recordRelease(p, a); closeDrawer();
+    finishMove(a === "transfer" ? `Recorded: moved <b>${esc(p.name)}</b> to the ${esc(clubName(otherClub()))}.` : `Recorded: released <b>${esc(p.name)}</b>.`); render(); return;
   }
   if (a === "undo") { undoLast(); finishMove("Undid the last move."); render(); return; }
   if (a === "clear-changes") { resetChanges(state.file); applyChanges(); faFlash = ""; render(); return; }
 }
 function finishMove(msg) { saveChanges(); applyChanges(); faFlash = msg; }
 
+// ---------------------------------------------------------------- Ask Claude
+// Uses the viewer's own Claude through the page's "sample" capability. Not available
+// outside claude.ai (for example on GitHub Pages), where the button stays hidden.
+let sampleFn = null, coachMsgs = [], coachBusy = false, coachAbort = null;
+(async () => {
+  try { sampleFn = window.claude && window.claude.use ? await window.claude.use("sample") : null; } catch (_) { sampleFn = null; }
+  if (sampleFn) document.body.classList.add("has-claude");
+})();
+
+function rosterContext(includeFA) {
+  const g = v => `${grade(v)}(${Math.round(v)})`;
+  const status = p => p.callup ? `CALL UP: ${p.callup}` : p.move === "bench" ? `BENCH: ${p.why}` : p.keep ? `KEEP${p.locked ? " [locked in game]" : ""}: ${p.why}` : p.move === "transfer" ? `SEND TO FARM CLUB (#${p.cutRank} to leave): ${p.why}` : `RELEASE (#${p.cutRank} to leave): ${p.why}`;
+  const H = [...state.hitters].sort((a, b) => b.value - a.value).map(h =>
+    `${h.name} | ${posText(h)} | bats ${h.bats} | age ${h.age ?? "?"} | ${h.tier} | OVR ${h.ovr} | Value ${h.value.toFixed(1)} | Bat ${g(h.bat)} OnBase ${g(h.ob)} Power ${g(h.pw)} Run ${g(h.run)} Glove@${h.bestPos} ${g(h.glove)} | Con ${h.contact} Pow ${h.power} Eye ${h.eye} Bunt ${h.bunt} Spd ${h.speed} Awr ${h.aware} Agg ${h.aggr} Rng ${h.range} Hnd ${h.handling} Arm ${h.arm} Flx ${h.flex} | Role: ${h.role} | ${status(h)}${h.g ? ` | ${h.g} G, OPS ${fmt3(h.stats.OPS)}` : ""}`);
+  const P = [...state.pitchers].sort((a, b) => b.value - a.value).map(p =>
+    `${p.name} | ${p.pos1} | throws ${p.throws} | age ${p.age ?? "?"} | ${p.tier} | OVR ${p.ovr} | Value ${p.value.toFixed(1)} | Stuff ${g(p.stuff)} Starter ${p.canStart ? g(p.sp) : "n/a"} | Velo ${p.velo} Acc ${p.acc} Fin ${p.fin} End ${p.end} | Role: ${p.role} | ${status(p)}${p.g ? ` | ${p.g} G, ERA ${fmt2(p.stats.ERA)}` : ""}`);
+  const L = m => state.lineups[m].order.map((s, i) => `${i + 1}. ${s.h.name} ${s.pos}`).join(", ");
+  const staff = state.staff.map(s => `${s.label} ${s.p.name}`).join(", ");
+  let fa = "";
+  if (includeFA) {
+    try {
+      const r = analyzeFA(), v = verdictFor(r), p = r.fa;
+      fa = `\n\nFREE AGENT BEING CONSIDERED (not on the roster yet):\n${p.name} | ${p.type} ${posText(p)} | ${p.type === "Hitter" ? `bats ${p.bats} | Con ${p.contact} Pow ${p.power} Eye ${p.eye} Bunt ${p.bunt} Spd ${p.speed} Awr ${p.aware} Agg ${p.aggr} Rng ${p.range} Hnd ${p.handling} Arm ${p.arm} Flx ${p.flex} | Bat ${g(p.bat)} Glove@${p.bestPos} ${g(p.glove)}` : `throws ${p.throws} | Velo ${p.velo} Acc ${p.acc} Fin ${p.fin} End ${p.end} | Stuff ${g(p.stuff)}`} | Value ${p.value.toFixed(1)}\nPage verdict: ${v.word}. ${v.line.replace(/<[^>]+>/g, "")} ${v.pts.join(" ").replace(/<[^>]+>/g, "")}\nSuggested release: ${r.drop ? `${r.drop.p.name} (${r.drop.why})` : "none"}`;
+    } catch (_) {}
+  }
+  return `You are the bench coach for the user's club, the ${clubName(state.club)}${state.club === "farm" ? ` (their farm club; their main club is the ${clubName("main")}, and players marked CALL UP would earn a role there)` : ""}, in curveball.gg, a browser baseball sim. Answer questions about their roster using ONLY the data below. Keep answers short (under 150 words unless asked for more), in plain language, and point to the specific ratings that matter. Use **bold** for player names on first mention and "- " for bullets. If the data can't answer something, say so. Don't invent game mechanics.
+
+HOW THE GAME WORKS (from its Help pages): Contact = fewer whiffs, more line drives. Power = extra bases and HR. Plate discipline = walks, squaring the ball up. Speed and Awareness = baserunning (aware runners are safe more often). Aggression = runs harder and steals more, and hitters pull the ball. Range = ground covered. Handling = clean plays, fewer errors (catchers: fewer passed balls, slow stealers). Arm = throwing runners out. Flexibility = infield double plays only. Velocity and Finesse miss bats; Accuracy prevents walks; Endurance = how deep a pitcher goes. Relievers are used from the top of the bullpen order; mop-up arms come from the bottom; pitchers need rest days. Roster limits: max ${ROSTER_MAX} players and ${PITCHER_MAX} pitchers, min 25 and 5. Locked players and players in the starting lineup can't be dropped. Young players develop by playing, so bench players who never play develop slowly. The user also owns a second club, the ${state.farm.name}, used as a farm club: players can be transferred between the two clubs, so a player who wouldn't play here can be sent there for at-bats and innings instead of being released (${farmOpen().players} roster spots and ${farmOpen().pitchers} pitcher spots open there).
+
+HOW THIS PAGE SCORES PLAYERS (estimates, since the game doesn't publish formulas): Letter grades on a fixed scale (A+ 65+, A 60, A- 57, B+ 54, B 51, B- 48, C+ 45, C 42, C- 39, D+ 36, D 32, F below). OnBase = 50% Contact + 50% Eye. Power = 70% Power + 30% Contact. Run = 60% Speed + 40% Awareness. Bat = 45% OnBase + 40% Power + 15% Run. Glove depends on position. Hitter Value = 75% Bat + 25% Glove at best position. Pitcher Stuff = 38% Velo + 32% Acc + 30% Fin; Starter = 80% Stuff + 20% Endurance (needs End 55+). KEEP = starts, is a recommended sub, is the only good backup at a position, is in the rotation, closes, or is in the top 6 of the bullpen, or is locked. Everyone else is marked SEND TO FARM CLUB (most upside first, while the farm has room; upside = Value + youth + pack tier + a standout rating) or RELEASE.
+
+ROSTER: ${state.players.length}/${ROSTER_MAX} players, ${state.pitchers.length}/${PITCHER_MAX} pitchers.
+HITTERS (best Value first):
+${H.join("\n")}
+
+PITCHERS (best Value first):
+${P.join("\n")}
+
+LINEUP vs RHP: ${L("RHP")}
+LINEUP vs LHP: ${L("LHP")}
+POWER LINEUP: ${L("POWER")}
+PITCHING STAFF ORDER: ${staff}${fa}`;
+}
+
+function mdLite(s) {
+  const lines = esc(s).split("\n");
+  let html = "", inList = false;
+  for (const raw of lines) {
+    const line = raw.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+    if (/^\s*[-•*]\s+/.test(line)) { if (!inList) { html += "<ul>"; inList = true; } html += `<li>${line.replace(/^\s*[-•*]\s+/, "")}</li>`; }
+    else { if (inList) { html += "</ul>"; inList = false; } if (line.trim()) html += `<p>${line}</p>`; }
+  }
+  return html + (inList ? "</ul>" : "");
+}
+const COACH_STARTERS = ["Who should I release first, and why?", "Who is my weakest everyday starter?", "Explain my bullpen order.", "Which bench players have the most upside?"];
+function renderCoach() {
+  const log = document.getElementById("coachLog");
+  if (!coachMsgs.length) {
+    log.innerHTML = `<div class="msg ai"><p>Ask anything about your roster: why someone is on the release list, who to start, or how two players compare. I see the same ratings and grades this page does.</p></div>
+      <div class="chips">${COACH_STARTERS.map(q => `<button class="chip" type="button" data-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>`;
+  } else {
+    log.innerHTML = coachMsgs.map(m => `<div class="msg ${m.role === "user" ? "user" : m.err ? "ai err" : "ai"}">${m.role === "user" ? esc(m.content) : (m.content ? mdLite(m.content) : "<p class='muted'>Thinking…</p>")}</div>`).join("");
+  }
+  log.scrollTop = log.scrollHeight;
+}
+function openCoach() { document.getElementById("coach").classList.add("open"); document.getElementById("askFab").style.visibility = "hidden"; renderCoach(); document.getElementById("coachInput").focus(); }
+function closeCoach() { document.getElementById("coach").classList.remove("open"); document.getElementById("askFab").style.visibility = ""; }
+
+async function askCoach(q, includeFA = state.view === "free-agent") {
+  q = (q || "").trim(); if (!q || !sampleFn || coachBusy) return;
+  coachBusy = true;
+  coachMsgs.push({ role: "user", content: q });
+  const answer = { role: "assistant", content: "" };
+  coachMsgs.push(answer); renderCoach();
+  // Rebuild the conversation with fresh roster data in the first message (Claude has no memory between calls).
+  const convo = coachMsgs.filter(m => !m.err && m !== answer).map(m => ({ role: m.role, content: m.content }));
+  convo[0] = { role: "user", content: rosterContext(includeFA) + "\n\nQUESTION: " + convo[0].content };
+  coachAbort = new AbortController();
+  try {
+    const res = await sampleFn(convo, { cache: false, signal: coachAbort.signal, onText: ({ text }) => { answer.content = text; renderCoach(); } });
+    answer.content = res.text || answer.content || "(No answer came back.)";
+  } catch (err) {
+    answer.err = true;
+    answer.content = err && err.code === "rate_limited" ? "Claude is busy right now. Try again in a minute."
+      : err && err.code === "not_granted" ? "Asking Claude isn't allowed on this page right now."
+      : (err && err.text) || "Something went wrong asking Claude. Try again.";
+  } finally { coachBusy = false; coachAbort = null; renderCoach(); }
+}
+document.getElementById("askFab").addEventListener("click", openCoach);
+document.getElementById("coachClose").addEventListener("click", closeCoach);
+document.getElementById("coachClear").addEventListener("click", () => { if (coachAbort) coachAbort.abort(); coachMsgs = []; coachBusy = false; renderCoach(); });
+document.getElementById("coachLog").addEventListener("click", e => { const c = e.target.closest("[data-q]"); if (c) askCoach(c.dataset.q); });
+document.getElementById("coachForm").addEventListener("submit", e => { e.preventDefault(); const i = document.getElementById("coachInput"); const q = i.value; i.value = ""; askCoach(q); });
+document.getElementById("coachInput").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.getElementById("coachForm").requestSubmit(); } });
+
+// ---------------------------------------------------------------- reading card screenshots
+state.cardRead = { status: "idle" };
+let imagesOK = false;
+(async () => {
+  // Wait for the sample capability, then check whether this view can send images.
+  for (let i = 0; i < 60 && !sampleFn; i++) await new Promise(r => setTimeout(r, 250));
+  if (!sampleFn) return;
+  try { const lim = await sampleFn.limits(); imagesOK = !!(lim && lim.images); } catch (_) { imagesOK = false; }
+  if (imagesOK) document.body.classList.add("has-images");
+})();
+const H_KEYS = ["contact", "power", "eye", "bunt", "speed", "aware", "aggr", "range", "handling", "arm", "flex"];
+const P_KEYS = ["velo", "acc", "fin", "end", "range", "handling", "arm"];
+const CARD_PROMPT = `These are screenshots of player cards from curveball.gg, a browser baseball sim. Read every player card whose name and ratings you can read. If cards overlap, include the ones you can read and use null for any rating you can't see.
+
+Reply with only JSON in this shape:
+{"cards":[{"name":"Bo Durham","type":"Hitter","pos1":"3B","pos2":"1B","hand":"R","age":20,"ovr":48,"contact":46,"power":52,"eye":45,"bunt":55,"speed":39,"aware":42,"aggr":38,"range":54,"handling":45,"arm":49,"flex":58,"hidden":[]}]}
+
+For a pitcher use "type":"Pitcher" and the keys "velo","acc","fin","end","range","handling","arm" instead of the hitting keys.
+
+How to read a card:
+- Rating names: Contact=contact, Power=power, Plate Discipline=eye, Bunting=bunt, Fielding Range=range, Handling=handling, Arm Strength=arm, Flexibility=flex, Speed=speed, Aggression=aggr, Awareness=aware, Velocity=velo, Accuracy=acc, Finesse=fin, Endurance=end.
+- A rating shown as "??" is hidden: set it to null and add its key to "hidden". Use null for "ovr" if the big number is "??".
+- Hitter positions: use C, 1B, 2B, 3B, SS, LF, CF, RF only. Take them from the line under the name (like "3B/1B" or "CF/RF"), or from the "PLAYS ..." line at the bottom (ignore DH). If the card just says "OF", use the first two outfield spots from the PLAYS line. pos2 is null if there is no second position.
+- Pitcher positions: "SP" for starters, "MR" for middle relievers, "CL" for closers.
+- hand: for hitters the first letter of Bats/Throws (like "R/L" means R); "S" for switch hitters. For pitchers, the throwing hand.
+- age: the number after "AGE".`;
+
+function cardToForm(c) {
+  const isH = (c.type || "").toLowerCase().startsWith("h");
+  const keys = isH ? H_KEYS : P_KEYS;
+  const num = v => (v === null || v === undefined || v === "" || isNaN(Number(v))) ? null : Math.round(Number(v));
+  const POS_H = ["C", "1B", "2B", "3B", "SS", "LF", "CF", "RF"], POS_P = ["SP", "MR", "CL"];
+  let pos1 = String(c.pos1 || "").toUpperCase(), pos2 = String(c.pos2 || "").toUpperCase();
+  if (isH && !POS_H.includes(pos1)) pos1 = "CF";
+  if (isH && !POS_H.includes(pos2)) pos2 = "";
+  if (!isH && !POS_P.includes(pos1)) pos1 = (num(c.end) ?? 0) >= 55 ? "SP" : "MR";
+  const f = { name: String(c.name || "Unknown player").trim(), pos1, pos2: isH ? pos2 : "", hand: ["R", "L", "S"].includes(String(c.hand || "").toUpperCase()) ? String(c.hand).toUpperCase() : "R", age: num(c.age) ?? "", tier: "Green" };
+  const assumed = [];
+  const known = keys.map(k => num(c[k])).filter(v => v !== null);
+  const fallback = known.length ? Math.round(known.reduce((a, b) => a + b, 0) / known.length) : 45;
+  keys.forEach(k => {
+    const v = num(c[k]);
+    if (v === null) { f[k] = Math.min(fallback, 50); assumed.push(k); } else f[k] = Math.max(0, Math.min(100, v));
+  });
+  const label = { contact: "Contact", power: "Power", eye: "Plate discipline", bunt: "Bunting", speed: "Speed", aware: "Awareness", aggr: "Aggression", range: "Range", handling: "Handling", arm: "Arm", flex: "Flexibility", velo: "Velocity", acc: "Accuracy", fin: "Finesse", end: "Endurance" };
+  return { type: isH ? "Hitter" : "Pitcher", f, assumed: assumed.length ? `${assumed.map(k => label[k]).join(", ")} ${assumed.length === 1 ? "was" : "were"} hidden or unreadable, so I assumed ${f[assumed[0]]}.` : "" };
+}
+
+async function readCardImage(file) {
+  if (!file || !sampleFn || !imagesOK || state.cardRead.status === "reading") return;
+  if (state.view !== "free-agent") { location.hash = "free-agent"; }
+  let thumb = "";
+  try { thumb = URL.createObjectURL(file); } catch (_) {}
+  state.cardRead = { status: "reading", thumb };
+  render();
+  try {
+    const out = await sampleFn.json(CARD_PROMPT, { images: [file], cache: false });
+    const cards = (out && Array.isArray(out.cards) ? out.cards : Array.isArray(out) ? out : []).filter(c => c && c.name);
+    if (!cards.length) throw { code: "no_cards" };
+    const forms = cards.map(cardToForm);
+    // Check every card against the roster as it stands now.
+    const saveType = state.faType, saveFA = { Hitter: { ...state.fa.Hitter }, Pitcher: { ...state.fa.Pitcher } };
+    const summary = forms.map(x => {
+      state.faType = x.type; state.fa[x.type] = { ...x.f };
+      const r = analyzeFA(), v = verdictFor(r);
+      const dropTxt = r.drop ? (r.drop.move === "transfer" ? `Send ${r.drop.p.name} to the ${clubShort("farm")}` : `Release ${r.drop.p.name}`) : "";
+      return { name: x.f.name, pos: x.type === "Hitter" ? `${x.f.pos1}${x.f.pos2 ? "/" + x.f.pos2 : ""} · bats ${x.f.hand}` : `${x.f.pos1} · throws ${x.f.hand}`, kind: v.kind, word: v.word, line: v.line, drop: dropTxt, assumed: x.assumed, form: x };
+    });
+    state.fa = saveFA; state.faType = saveType;
+    // Open the best card (or the only one) in the form.
+    const rank = { sign: 0, maybe: 1, pass: 2 };
+    const best = [...summary.keys()].sort((a, b) => rank[summary[a].kind] - rank[summary[b].kind])[0];
+    loadCardForm(summary[best].form);
+    state.cardRead = { status: "done", thumb, summary, msg: summary.length === 1 ? `Read ${summary[0].name}.${summary[0].assumed ? " " + summary[0].assumed : ""}` : `Read ${summary.length} cards. ${summary[best].name} is open in the form below.` };
+    faFlash = summary.length === 1 && summary[0].assumed ? esc(summary[0].assumed) : "";
+  } catch (e) {
+    const code = e && e.code;
+    const msg = code === "not_granted" ? "Reading screenshots isn't allowed on this page right now."
+      : code === "rate_limited" ? "Claude is busy right now. Try again in a minute."
+      : code === "image_rejected" ? "That image couldn't be used. Try a PNG or JPG screenshot."
+      : code === "images_unavailable" ? "This view can't send images to Claude."
+      : "Couldn't read a player card in that screenshot. Try a closer crop of the card.";
+    if (code === "images_unavailable" || code === "not_granted") { imagesOK = false; document.body.classList.remove("has-images"); }
+    state.cardRead = { status: "error", thumb, msg };
+  }
+  render();
+}
+function loadCardForm(x) {
+  state.faType = x.type;
+  state.fa[x.type] = { ...state.fa[x.type], ...x.f };
+}
+
 // ---------------------------------------------------------------- render & events
 const VIEWS = { "free-agent": viewFreeAgent, roster: viewRoster, positions: viewPositions, lineups: viewLineups, pitching: viewPitching, guide: viewGuide };
 let errorMsg = "";
 function render() {
   document.querySelectorAll(".tabs a").forEach(a => a.setAttribute("aria-current", a.getAttribute("href") === "#" + state.view ? "page" : "false"));
-  document.getElementById("teamName").textContent = state.team || "Scouting Desk";
+  document.getElementById("teamName").textContent = state.file ? state.team : clubName(state.club);
+  document.getElementById("clubSwitch").innerHTML = `<div class="seg" role="group" aria-label="Club">${["main", "farm"].map(k => `<button type="button" data-club="${k}" aria-pressed="${state.club === k}">${esc(clubShort(k))}</button>`).join("")}</div>`;
+  document.getElementById("resetBtn").style.display = state.club === "main" ? "" : "none";
   document.getElementById("fileLine").innerHTML = state.file
     ? `<b>${state.hitters.length}</b> hitters · <b>${state.pitchers.length}</b> pitchers · ${esc(state.file)}${(state.changes.log || []).length ? ` · <b>${state.changes.log.length}</b> move${state.changes.log.length === 1 ? "" : "s"} since` : ""}`
     : "No roster loaded";
   const main = document.getElementById("main");
-  main.innerHTML = (errorMsg ? `<div class="notice" role="alert">${esc(errorMsg)}</div>` : "") + changesBanner() + (state.players.length ? VIEWS[state.view]() : "");
+  const prompt = !state.file ? `<div class="card upload-prompt"><h2>Upload the ${esc(clubName(state.club))}' roster</h2>
+    <p style="margin:0">On curveball.gg, switch to this club, open <b>Clubhouse → Roster</b>, click <b>Export CSV</b>, then use <b>Upload roster CSV</b> above or drag the file onto this page. The page keeps each club's roster separately.${state.players.length ? ` Until then, this view only shows the ${state.players.length} player${state.players.length === 1 ? "" : "s"} you've moved here.` : ""}</p></div>` : "";
+  main.innerHTML = (errorMsg ? `<div class="notice" role="alert">${esc(errorMsg)}</div>` : "") + prompt + changesBanner() + (state.players.length ? VIEWS[state.view]() : "");
+  if (state.club === "farm") scheduleCallups();
   if (state.view === "free-agent" && state.players.length) renderFAResult();
 }
 
@@ -1124,6 +1521,14 @@ document.getElementById("main").addEventListener("click", e => {
   if (s) { const k = s.dataset.sort; state.sort = { key: k, dir: state.sort.key === k ? -state.sort.dir : (k === "name" || k === "pos" ? 1 : -1) }; render(); return; }
   const act = e.target.closest("[data-action]");
   if (act) { handleAction(act); return; }
+  if (e.target.id === "cardPick") { document.getElementById("cardFile").click(); return; }
+  const lc = e.target.closest("[data-loadcard]");
+  if (lc) { const s = state.cardRead.summary && state.cardRead.summary[Number(lc.dataset.loadcard)]; if (s) { loadCardForm(s.form); faFlash = s.assumed ? esc(s.assumed) : ""; render(); } return; }
+  if (e.target.id === "askFA") {
+    const f = state.fa[state.faType];
+    openCoach(); askCoach(`I'm looking at a free agent: ${(f.name || "this player")}. Should I sign him, and is the suggested release the right one? Explain the tradeoff.`, true);
+    return;
+  }
   if (e.target.closest("[data-sort-cut]")) { state.filter = "all"; state.sort = { key: "cut", dir: 1 }; render(); return; }
   const tbtn = e.target.closest("[data-fatype]");
   if (tbtn) { state.faType = tbtn.dataset.fatype; render(); return; }
@@ -1150,12 +1555,35 @@ document.getElementById("main").addEventListener("input", e => {
     const el = document.getElementById(e.target.id); el && el.focus();
   }
 });
+document.getElementById("main").addEventListener("change", e => {
+  if (e.target.id === "cardFile") { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) readCardImage(f); return; }
+  const k = e.target.dataset && e.target.dataset.farm; if (!k) return;
+  state.farm[k] = k === "name" ? (e.target.value.trim() || "Farm club") : Math.max(0, parseInt(e.target.value, 10) || 0);
+  saveFarm(); computeAll(); render();
+});
 document.getElementById("main").addEventListener("keydown", e => {
   if (e.key === "Enter" && e.target.matches("tr[data-pid], li[data-pid]")) openPlayer(Number(e.target.dataset.pid));
 });
 document.getElementById("overlay").addEventListener("click", closeDrawer);
+document.getElementById("clubSwitch").addEventListener("click", e => {
+  const b = e.target.closest("[data-club]"); if (!b || b.dataset.club === state.club) return;
+  closeDrawer(); stash(); unstash(b.dataset.club); faFlash = ""; errorMsg = "";
+  try { localStorage.setItem("csgg-club", state.club); } catch (_) {}
+  render();
+});
 document.getElementById("drawer").addEventListener("click", e => {
   if (e.target.id === "closeDrawer") closeDrawer();
+  const ask = e.target.closest("[data-ask]");
+  if (ask) {
+    const p = state.players.find(x => x.id === Number(ask.dataset.ask));
+    if (p) {
+      closeDrawer();
+      const q = p.keep ? `Why does the page say to keep ${p.name}? What's his role, and is there any case for releasing him?`
+                       : `Why is ${p.name} #${p.cutRank} in the release order? Who else could I release instead, and what would I lose?`;
+      openCoach(); askCoach(q);
+    }
+    return;
+  }
   const act = e.target.closest("[data-action]"); if (act) handleAction(act);
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
@@ -1167,8 +1595,8 @@ function readFile(file) {
     try {
       const prev = state.changes; resetChanges(file.name);
       try { loadRoster(String(r.result), file.name); } catch (err) { state.changes = prev; saveChanges(); throw err; }
-      errorMsg = ""; faFlash = "";
-      try { localStorage.setItem("csgg-roster", JSON.stringify({ text: r.result, name: file.name, at: Date.now() })); } catch (_) {}
+      errorMsg = ""; faFlash = ""; callupKey = "";
+      try { localStorage.setItem(LSKEY.roster(state.club), JSON.stringify({ text: r.result, name: file.name, at: Date.now() })); } catch (_) {}
     } catch (err) { errorMsg = err.message + " Your previous roster is still shown."; }
     render();
   };
@@ -1186,7 +1614,18 @@ let dragDepth = 0;
 window.addEventListener("dragenter", e => { e.preventDefault(); dragDepth++; document.body.classList.add("dragging"); });
 window.addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove("dragging"); } });
 window.addEventListener("dragover", e => e.preventDefault());
-window.addEventListener("drop", e => { e.preventDefault(); dragDepth = 0; document.body.classList.remove("dragging"); readFile(e.dataTransfer.files[0]); });
+window.addEventListener("drop", e => {
+  e.preventDefault(); dragDepth = 0; document.body.classList.remove("dragging");
+  const f = e.dataTransfer.files[0]; if (!f) return;
+  if (/^image\//.test(f.type)) readCardImage(f); else readFile(f);
+});
+document.addEventListener("paste", e => {
+  if (!imagesOK) return;
+  const item = [...(e.clipboardData ? e.clipboardData.items : [])].find(i => i.kind === "file" && /^image\//.test(i.type));
+  if (!item) return;
+  e.preventDefault();
+  readCardImage(item.getAsFile());
+});
 
 // Start with the last uploaded roster in this browser, or the sample.
 (function init() {
@@ -1198,7 +1637,19 @@ window.addEventListener("drop", e => { e.preventDefault(); dragDepth = 0; docume
   const file = saved ? saved.name : SAMPLE_FILE;
   state.changes = ch && ch.file === file ? ch : { file, added: [], released: [] };
   try { if (saved) loadRoster(saved.text, saved.name); else loadRoster(SAMPLE_CSV, SAMPLE_FILE); }
-  catch (_) { state.changes = { file: SAMPLE_FILE, added: [], released: [] }; loadRoster(SAMPLE_CSV, SAMPLE_FILE); }
+  catch (_) { state.changes = freshChanges(SAMPLE_FILE); loadRoster(SAMPLE_CSV, SAMPLE_FILE); }
+  // The farm club, if one has been uploaded or players were moved there.
+  let fr = null, fch = null;
+  try { fr = JSON.parse(localStorage.getItem(LSKEY.roster("farm")) || "null"); } catch (_) {}
+  try { fch = JSON.parse(localStorage.getItem(LSKEY.changes("farm")) || "null"); } catch (_) {}
+  let fbase = null;
+  try { if (fr) fbase = parseRosterText(fr.text); } catch (_) { fr = null; }
+  const ffile = fr ? fr.name : "";
+  state.clubs.farm = { base: fbase, file: ffile, team: fr ? teamFromFile(ffile) : state.farm.name, changes: fch && fch.file === ffile ? fch : freshChanges(ffile) };
+  if (state.clubs.farm.team === "Scouting Desk") state.clubs.farm.team = state.farm.name;
+  computeAll(); // farm room is known now
+  let last = "main"; try { last = localStorage.getItem("csgg-club") || "main"; } catch (_) {}
+  if (last === "farm") { stash(); unstash("farm"); }
   route();
 })();
 </script>
